@@ -1,0 +1,11 @@
+.login {
+    text-align: left;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+body > div,
+body > div > div,
+body > div > div > div.login-form {
+    height: 100%;
+}
