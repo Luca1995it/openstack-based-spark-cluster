@@ -6,6 +6,7 @@ class OpenstackDriver:
     def __init__(self, cloud='apachesparkclustermanager'):
         self.base_cloud = cloud
         self.conn = openstack.connect(cloud=cloud)
+        self._reset_flavors()
 
     def _reset_flavors(self):
         # momentarily change the privileges of the connection using the admin user
