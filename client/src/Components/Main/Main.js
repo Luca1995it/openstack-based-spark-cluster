@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Button, Container, Divider, Grid, Header, Icon, Image, List, Menu, Responsive, Segment, Sidebar, Visibility, Label} from 'semantic-ui-react'
+import { Container, Menu, Responsive, Segment, Visibility, Label} from 'semantic-ui-react'
 import Home from '../Home/Home';
 import Login from '../Login/Login';
 import Logout from '../Logout/Logout';
@@ -17,14 +17,13 @@ class Main extends Component{
 
     state = {
         fixed: false,
-        logged: false,
         token: undefined,
         page: 'home'
     }
 
     constructor(props){
         super(props);
-        this.setUserState = this.setUserState.bind(this);
+        this.setToken = this.setToken.bind(this);
         this.setPage = this.setPage.bind(this);
     }
 
@@ -38,11 +37,14 @@ class Main extends Component{
         });
     }
 
-    setUserState(conf){
+    setToken(token){
         this.setState({
             ...this.state,
-            logged: conf.logged,
-            token: conf.token
+            token: token
+        }, () => {
+            if(token){
+                this.setPage('home')
+            }
         });
     }
 
@@ -68,11 +70,11 @@ class Main extends Component{
                 break;
 
             case 'login':
-                child = <Login setUserState={this.setUserState}/>;
+                child = <Login setToken={this.setToken}/>;
                 break;
 
             case 'logout':
-                child = <Logout setUserState={this.setUserState}/>;
+                child = <Logout setToken={this.setToken}/>;
                 break;
 
             default:
