@@ -17,7 +17,10 @@ db = client.ascm
 users = db.users
 clusters = db.clusters
 
-#import OpenstackDriver as osdriver
+'''
+import OpenstackDriver as osdriver
+openstackdriver = osdriver.OpenstackDriver()
+'''
 
 # Server setup
 HOST_NAME = 'localhost'
@@ -55,12 +58,16 @@ def process():
     try:
         parameters = json.load(request.body)
     except json.decoder.JSONDecodeError as error:
-        response.status = 401
-        return "Malformed JSON"
+        return {
+            'status': "MALFORMED_JSON",
+            'message': "Malformed JSON body in request"
+        }
     
     if 'username' not in parameters or 'password' not in parameters:
-        response.status = 401
-        return "Missing username or password"
+        return {
+            'status': "MISSING_AUTH_PARAMS",
+            'message': 'username or password missing'
+        }
 
     parameters['password'] = _hashstring(parameters['password'])
 
@@ -77,12 +84,15 @@ def process():
         }, {'$set': {'token': token, 'token_time': int(time.time())}})
 
         return {
+            'status': "OK",
+            'message': "OK",
             'token': token
         }
     else:
-        response.status = 401
-        return "Wrong username or password"
-
+        return {
+            'status': 'WRONG_AUTH_PARAMS',
+            'message': "Wrong username or password"
+        }
 
 
 # Authentication function for all the protected operations
@@ -93,25 +103,26 @@ def require_api_token(func):
         # Check to see if it's in their session
         if 'token' not in parameters:
             # Token was not inserted in the request
-            response.status = 401
-            return "Missing token"
-
-        if len(parameters['token']) == 0:
-            # Token is empty
-            response.status = 401
-            return "Empty token"
+            return {
+                'status': "MISSING_TOKEN",
+                'message': "Token is missing"
+            }
 
         user = users.find_one({'token': parameters['token']})
-        print(user)
+
         if user is None:
             # Token is not valid
-            response.status = 401
-            return "Wrong token"
+            return {
+                'status': "INVALID_TOKEN",
+                'message': "The token does not correspond to a user"
+            }
 
         elif time.time() - user['token_time'] > TOKEN_EXPIRATION_SECONDS:
             # Token has expired
-            response.status = 401
-            return "token has expired, please log in again"
+            return {
+                'status': "TOKEN_EXPIRED",
+                'message': "Token has expired, please log in again"
+            }
 
         else:
             # Otherwise just send them where they wanted to go
@@ -120,19 +131,24 @@ def require_api_token(func):
     return check_token
 
 
-@app.route('/api', method=['OPTIONS', 'POST'])
+# Get list of flavors 
+
+# Get list of clusters of the user with actual token
+@app.route('/api/clusters', method=['OPTIONS', 'GET'])
 @require_api_token
 def process():
     parameters = json.load(request.body)
-
     user = users.find_one({'token': parameters['token']})
 
-    return "it worked!"
-
+    clus = clusters.find({'user_id': user['_id']})
+    results = []
+    for c in clus:
+        results.append(osdriver.)
 
 # Enable CORS on this app
 app.install(EnableCors())
 
+# Actually start the API server
 if __name__ == '__main__':
     
     print(time.asctime(), 'Server Starts - %s:%s' % (HOST_NAME, PORT_NUMBER))

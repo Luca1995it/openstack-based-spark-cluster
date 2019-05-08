@@ -38,14 +38,11 @@ class Main extends Component{
     }
 
     setToken(token){
+        console.log(token)
         this.setState({
             ...this.state,
             token: token
-        }, () => {
-            if(token){
-                this.setPage('home')
-            }
-        });
+        }, () => this.setPage('home'));
     }
 
     render() {
@@ -85,6 +82,7 @@ class Main extends Component{
         return (
             <Responsive getWidth={getWidth} minWidth={Responsive.onlyTablet.minWidth}>
                 <Visibility
+                    className='header'
                     once={false}
                     onBottomPassed={this.showFixedMenu}
                     onBottomPassedReverse={this.hideFixedMenu}>
@@ -108,7 +106,7 @@ class Main extends Component{
                                 <Menu.Item as='a' active={this.state.page === 'home'} onClick={() => this.setPage('home')}>
                                     Home
                                 </Menu.Item>
-                                {this.state.logged ? 
+                                {this.state.token ? 
                                     <Menu.Item as='a' active={this.state.page === 'clusters'} onClick={() => this.setPage('clusters')}>
                                         Clusters
                                     </Menu.Item> : null
@@ -119,7 +117,7 @@ class Main extends Component{
                                 <Menu.Item as='a' active={this.state.page === 'contacts'} onClick={() => this.setPage('contacts')}>
                                     Contacts
                                 </Menu.Item>
-                                {!this.state.logged ?
+                                {!this.state.token ?
                                 <Menu.Item position='right' as='a' active={this.state.page === 'login'} onClick={() => this.setPage('login')}>
                                     Log in
                                 </Menu.Item> :
@@ -130,8 +128,9 @@ class Main extends Component{
                         </Menu>
                     </Segment>
                 </Visibility>
-                
-                {child}
+                <div className='content'>
+                    {child}
+                </div>
                 <Footer />
             </Responsive>
         );

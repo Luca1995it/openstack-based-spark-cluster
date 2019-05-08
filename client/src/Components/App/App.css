@@ -1,10 +1,31 @@
-.App {
+html, body, #root, .App, .App-header {
+    height: 100%;
+    margin: 0;
+    background-color: white;
+    /*font-size: calc(10px + 2vmin);*/
+    color: white;
     text-align: center;
 }
 
-.App-header {
-    background-color: white;
-    min-height: 100vh;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.container {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+
+.header {
+    flex: 0 1 auto;
+    /* The above is shorthand for:
+    flex-grow: 0,
+    flex-shrink: 1,
+    flex-basis: auto
+    */
+}
+
+.content {
+    flex: 1 1 auto;
+}
+
+.footer {
+    flex: 0 1 40px;
 }

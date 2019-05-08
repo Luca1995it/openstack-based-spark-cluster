@@ -28,28 +28,19 @@ class Login extends Component {
             })
             .then(res => {
                 console.log(res);
-                
-                switch (res.status) {
-                    case 200:
-                        this.props.setToken(res.token);
+                let result = res.data;
+
+                switch (result.status) {
+                    case "OK":
+                        this.props.setToken(result.token);
                         break;
-                    case 401:
-                        this.setState({
-                            ...this.state,
-                            message: res.message,
-                            error: true
-                        }, () => setTimeout(() => {
-                            this.setState({
-                                ...this.state,
-                                message: undefined,
-                                error: false
-                            });
-                        }, 3000));
-                        break;
+                    case "MALFORMED_JSON":
+                    case "MISSING_AUTH_PARAMS":
+                    case "WRONG_AUTH_PARAMS":
                     default:
                         this.setState({
                             ...this.state,
-                            message: "server not responding",
+                            message: result.message,
                             error: true
                         }, () => setTimeout(() => {
                             this.setState({
@@ -61,11 +52,11 @@ class Login extends Component {
                         break;
                 }
             })
-            .catch((err) => {
+            .catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,
-                    message: "internal error",
+                    message: "Internal Error",
                     error: true
                 }, () => setTimeout(() => {
                     this.setState({
@@ -110,7 +101,7 @@ class Login extends Component {
                                     size='big'
                                     onKeyPress={(e) => { return e.key === 'Enter' ? this.login() : null }} />
 
-                                <Button color='teal' fluid size='large' onClick={this.login} loading={this.state.loading}>
+                                <Button color='teal' fluid size='large' onClick={this.login} loading={this.state.isLoading}>
                                     Login
                                 </Button>
                             </Segment>

@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
-import { Button, Form, Grid, Header, Segment } from 'semantic-ui-react';
+import { Button, Grid, Header, Segment } from 'semantic-ui-react';
 
 
 class Logout extends Component {
 
     render() {
-        return <Segment textAlign='center' verticalAlign='middle'>
+        return <Segment textAlign='center'>
             <Grid>
                 <Grid.Row>
                     <Grid.Column width={5}/>
@@ -13,11 +13,9 @@ class Logout extends Component {
                         <Header as='h2' color='teal' textAlign='center'>
                             Logout
                         </Header>
-                        <Form size='large'>
-                            <Button color='teal' fluid size='large' onClick={() => this.props.setToken(undefined)}>
-                                Logout
-                            </Button>
-                        </Form>
+                        <Button color='teal' fluid size='large' onClick={() => this.props.setToken(undefined)}>
+                            Logout
+                        </Button>
                     </Grid.Column>
                     <Grid.Column width={5}/>
                 </Grid.Row>
