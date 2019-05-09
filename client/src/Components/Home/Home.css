@@ -1,12 +1,29 @@
-.header1 {
-    font-size: 4pc;
-    font-weight: normal;
-    margin-bottom: 0;
-    margin-top: 30px;
+.homeContainer {
+    display: flex;
+    flex-direction: row;
+    width: stretch;
 }
 
-.header2 {
-    font-size: 1.7em;
-    font-weight: normal;
-    margin-top: 40px;
+.homeSubContainer{
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.leftContainer {
+    width: 70%;
+}
+
+.rightContainer{
+    width: 30%;
+}
+
+.homeAdvices {
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.logoChange > .fluid {
+    width: stretch;
 }

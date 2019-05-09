@@ -142,8 +142,9 @@ def process():
 
     clus = clusters.find({'user_id': user['_id']})
     results = []
-    for c in clus:
-        results.append(osdriver.)
+    #for c in clus:
+    #    results.append(osdriver.)
+    return ""
 
 # Enable CORS on this app
 app.install(EnableCors())

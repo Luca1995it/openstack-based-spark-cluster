@@ -1,0 +1,80 @@
+.navbar {
+	background-color: #373737 !important;
+	width: unset !important;
+	display: flex !important;
+}
+
+.navItem {
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	flex-direction: column !important;
+	color: #DCD0C0 !important;
+	transition: all .6s ease-in-out;
+}
+
+.navItem:hover{
+	color: #C0B283 !important;
+	transform: scale(1.05);
+}
+
+.noSubItem {
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	flex-direction: column !important;
+	color: #DCD0C0 !important;
+	transition: all .6s ease-in-out;
+}
+
+.noSubItem:hover{
+	color: #C0B283 !important;
+	transform: scale(1.05);
+}
+
+.navHeaderItem{
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	flex-direction: column !important;
+	color: inherit;
+	padding: 0 !important;
+}
+
+.navHeaderItem:hover {
+	color: inherit;
+}
+
+.subItem {
+	text-align: center;
+	color: #DCD0C0 !important;
+}
+
+.subItem:hover {
+	font-weight: bold !important;
+}
+
+.sign {
+	text-align: center;
+	margin-top: auto;
+	font-size: smaller;
+}
+
+.navText {
+    text-align: center;
+}
+
+#sidenav .logoutButton {
+    transition: all .3s ease-in-out;
+}
+
+.logoutButton span {
+    color: #DCD0C0 !important;
+}
+.logoutButton:hover span {
+    color: #373737 !important
+}
+
+#sidenav .logoutButton:hover {
+    background-color: #F4F4F4 !important;
+}

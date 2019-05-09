@@ -1,0 +1,4 @@
+{
+    "api_server": "http://localhost:9000",
+    "project_name": "Apache Spark Cluster Manager"
+}

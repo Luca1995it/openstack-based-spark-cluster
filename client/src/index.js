@@ -1,17 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './Components/App/App';
-import * as serviceWorker from './serviceWorker';
+import {BrowserRouter as Router} from 'react-router-dom';
 
 import axios from 'axios';
-import config from './Components/Config.json';
+import Routes from './Routes';
+import config from './Config.json';
 
 axios.defaults.baseURL = config.api_server;
+document.title = config.project_name;
 
-ReactDOM.render(<App />, document.getElementById('root'));
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+ReactDOM.render(
+    <Router>
+        <Routes />
+    </Router>
+, document.getElementById('root'));

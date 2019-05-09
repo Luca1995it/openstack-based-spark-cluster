@@ -1,6 +1,10 @@
 import React, {Component} from 'react';
-import { Button, Form, Grid, Header, Label, Segment } from 'semantic-ui-react';
+import { Button, Form, Message, Header, Icon, Label} from 'semantic-ui-react';
 import axios from 'axios';
+import config from '../../Config.json';
+import './Login.css';
+import { Link } from 'react-router-dom';
+
 
 class Login extends Component {
 
@@ -9,15 +13,16 @@ class Login extends Component {
         username: "",
         password: "",
         isLoading: false,
-        error: false
+        error: false,
     }
 
     constructor(props){
         super(props);
-        this.login = this.login.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.isFormReady = this.isFormReady.bind(this);
     }
 
-    login(){
+    handleSubmit(){
         this.setState({
             ...this.state,
             isLoading: true
@@ -27,9 +32,7 @@ class Login extends Component {
                 password: this.state.password
             })
             .then(res => {
-                console.log(res);
                 let result = res.data;
-
                 switch (result.status) {
                     case "OK":
                         this.props.setToken(result.token);
@@ -41,12 +44,13 @@ class Login extends Component {
                         this.setState({
                             ...this.state,
                             message: result.message,
-                            error: true
+                            error: true,
+                            isLoading: false
                         }, () => setTimeout(() => {
                             this.setState({
                                 ...this.state,
                                 message: undefined,
-                                error: false
+                                error: false,
                             });
                         }, 3000));
                         break;
@@ -56,61 +60,69 @@ class Login extends Component {
                 console.log(err);
                 this.setState({
                     ...this.state,
-                    message: "Internal Error",
-                    error: true
+                    message: "Connection Error",
+                    error: true,
+                    isLoading: false
                 }, () => setTimeout(() => {
                     this.setState({
                         ...this.state,
                         message: undefined,
-                        error: false
+                        error: false,
                     });
                 }, 3000));
             });
         })
-        
+    }
+
+    isFormReady(){
+        return (this.state.username.length > 3) && (this.state.password.length > 7)
     }
 
     render() {
-        return <Segment textAlign='center'>
-            <Grid>
-                <Grid.Row>
-                    <Grid.Column width={5}/>
-                    <Grid.Column width={6}>
-                        <Header as='h2' color='teal' textAlign='center'>
-                            Log-in to your account
-                        </Header>
-                        {this.state.message ? <Label color='red'>{this.state.message}</Label> : null}
-                        <Form size='large'>
-                            <Segment stacked>
-                                <Form.Input 
-                                    fluid icon='user' iconPosition='left' 
-                                    placeholder='Username...' type='text'
-                                    error={this.state.error}
-                                    value={this.state.username}
-                                    onChange={(e) => this.setState({...this.state, username: e.target.value})}
-                                    size='big'
-                                    onKeyPress={(e) => { return e.key === 'Enter' ? this.login() : null }}/>
+        return <div className="containerLogin">
+            <div className="middleDiv">
+                <Header inverted size='huge'>
+                    {config.project_name}
+                    <Header.Subheader>
+                        Login into your account or <Label as={Link} to={'/registration'} className='navText'>Register</Label>
+                    </Header.Subheader>
+                </Header>
+                <Form error={this.state.error} onSubmit={this.handleSubmit}>
+                    <Message
+                        error
+                        header={'Login Error'}
+                        content={this.state.message}
+                        className='errMessage'
+                    />   
+                    <Form.Input 
+                        fluid icon='user' iconPosition='left' 
+                        placeholder='Username' type='text'
+                        value={this.state.username}
+                        onChange={(e) => this.setState({...this.state, username: e.target.value})}
+                        size='big'
+                        onKeyPress={(e) => (e.key === 'Enter') && this.isFormReady() ? this.handleSubmit() : null}/>
 
-                                <Form.Input 
-                                    fluid icon='lock' iconPosition='left' 
-                                    placeholder='Password' type='password'
-                                    
-                                    error={this.state.error}
-                                    value={this.state.password}
-                                    onChange={(e) => this.setState({ ...this.state, password: e.target.value })}
-                                    size='big'
-                                    onKeyPress={(e) => { return e.key === 'Enter' ? this.login() : null }} />
-
-                                <Button color='teal' fluid size='large' onClick={this.login} loading={this.state.isLoading}>
-                                    Login
-                                </Button>
-                            </Segment>
-                        </Form>
-                    </Grid.Column>
-                    <Grid.Column width={5}/>
-                </Grid.Row>
-            </Grid>
-        </Segment>
+                    <Form.Input 
+                        fluid icon='lock' iconPosition='left' 
+                        placeholder='Password' type='password'
+                        value={this.state.password}
+                        onChange={(e) => this.setState({ ...this.state, password: e.target.value })}
+                        size='big'
+                        onKeyPress={(e) => (e.key === 'Enter') && this.isFormReady() ? this.handleSubmit() : null} />
+                </Form>
+                <Button
+                    basic inverted animated={!this.state.isLoading}
+                    loading={this.state.isLoading} onClick={this.handleSubmit}
+                    floated='right' size='large' className='loginButton'
+                    disabled={!this.isFormReady()}
+                >
+                    <Button.Content visible>Login</Button.Content>
+                    <Button.Content hidden>
+                        <Icon name='right arrow' />
+                    </Button.Content>
+                </Button>                
+            </div>
+        </div>
     }
 }
 

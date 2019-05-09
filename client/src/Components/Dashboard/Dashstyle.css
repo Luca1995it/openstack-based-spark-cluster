@@ -1,0 +1,14 @@
+.container{
+    display: flex;
+    min-height: stretch;
+    background-color: #F4F4F4;
+}
+
+.innerContainer{
+    padding: 20px;
+    width: stretch !important;
+}
+
+* {
+    font-size: 16px;
+}
