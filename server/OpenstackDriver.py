@@ -4,6 +4,27 @@ DEFAULT_PROJECT = 'apache-spark-cluster-manager'
 DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
 
+class NetAddr:
+
+    def __init__(self,o1=192,o2=168,o3=1,o4=0,mask=24):
+        self.curr_o1 = o1
+        self.curr_o2 = o2
+        self.curr_o3 = o3
+        self.curr_o4 = o4
+        self.next_o3 = o3 + 1
+        self.mask = mask
+
+    def get_available_subnet(self):
+        res = f"{self.curr_o1}.{self.curr_o2}.{self.curr_o3}.{self.curr_o4}/{mask}"
+        return res
+
+    def get_first_address(self):
+        return f"{self.curr_o1}.{self.curr_o2}.{self.curr_o3}.1"
+
+    def next(self):
+        self.curr_o3 = self.next_o3
+        self.next_o3 += 1
+
 class OpenstackDriver:
     # I created a cloud entry in the file on the server at /etc/openstack/cloud.yaml to speed up the connection
     # otherwise one should specify all the parameters like username, psw, region, endpoint_url, ...
@@ -11,6 +32,9 @@ class OpenstackDriver:
         self.default_cloud = cloud
         self.default_project = project
         self.conn = openstack.connect(cloud=cloud)
+
+        #works if default params aren't changed
+        self.address_pool = NetAddr()
         
     def _completely_reset_project(self):
         # this function will cancel and re-create all the projects, flavors, instances, groups and users
@@ -22,45 +46,45 @@ class OpenstackDriver:
 
     def _init_flavors(self):
         # delete useless flavors
-        for f in conn.compute.flavors():
-            conn.compute.delete_flavor(f.id, ignore_missing=True)
+        for f in self.conn.compute.flavors():
+            self.conn.compute.delete_flavor(f.id, ignore_missing=True)
         
         # create the new ones
-        conn.compute.create_flavor(
+        self.conn.compute.create_flavor(
             name='small_spark_node', ram=2048, vcpus=1, disk=4)
-        conn.compute.create_flavor(
+        self.conn.compute.create_flavor(
             name='medium_spark_node', ram=3078, vcpus=2, disk=6)
-        conn.compute.create_flavor(
+        self.conn.compute.create_flavor(
             name='master_spark_node', ram=1024, vcpus=1, disk=4)
 
     def _init_group(self):
-        group = conn.identity.find_group(DEFAULT_GROUPNAME)
+        group = self.conn.identity.find_group(DEFAULT_GROUPNAME)
         if group:
-            conn.identity.delete_group(group.id)
-            conn.identity.create_group(name=DEFAULT_GROUPNAME, description="Default group for the Apache Spark Cluster Manager project")
+            self.conn.identity.delete_group(group.id)
+            self.conn.identity.create_group(name=DEFAULT_GROUPNAME, description="Default group for the Apache Spark Cluster Manager project")
 
     def _init_instances(self):
         proj_id = self._get_project_id()
-        for instance in conn.compute.servers():
+        for instance in self.conn.compute.servers():
             if instance.default_project_id == proj_id:
                 # check that this works
-                conn.compute.delete_instance(instance.id)
+                self.conn.compute.delete_instance(instance.id)
 
     def _init_project(self):
-        proj = conn.identity.find_project(self.default_project)
+        proj = self.conn.identity.find_project(self.default_project)
         if proj:
-            conn.identity.delete_project(proj.id)
-            conn.identity.create_project(name=DEFAULT_PROJECT, description="Apache Spark Cluster Manager default project", is_enabled=True)
+            self.conn.identity.delete_project(proj.id)
+            self.conn.identity.create_project(name=DEFAULT_PROJECT, description="Apache Spark Cluster Manager default project", is_enabled=True)
 
     def _init_users(self):
         proj_id = self._get_project_id()
         for user in conn.identity.users():
             if user.default_project_id == proj_id:
                 # check that this works
-                conn.compute.delete_instance(user.id)
+                self.conn.compute.delete_instance(user.id)
 
     def _get_images(self):
-        return list(conn.compute.images())
+        return list(self.conn.compute.images())
 
     def _create_image(self, filename, image_name, disk_format='raw', container_format='bare', visibility='public'):
         data = open(filename, 'rb').read()
@@ -74,7 +98,7 @@ class OpenstackDriver:
         self.conn.image.upload_image(**image_attrs)
 
     def _get_project_id(self):
-        return conn.identity.find_project(self.default_project).id
+        return self.conn.identity.find_project(self.default_project).id
 
     def _create_user(self, name, password, default_project_id="", email="", is_enabled=True, password_expires_at=None):
         if not default_project_id:
@@ -88,16 +112,36 @@ class OpenstackDriver:
             description="")
 
     def _get_flavors(self):
-        return list(conn.compute.flavors())
+        return list(self.conn.compute.flavors())
 
     def _get_networks(self):
-        return list(conn.network.networks())
+        return list(self.conn.network.networks())
 
     def _get_subnets(self):
-        return list(conn.network.subnets())
+        return list(self.conn.network.subnets())
+
+
+    def _create_network(self,name=""):
+        net = self.conn.network.create_network(name=f"{name}_network")
+        subnet = self.conn.network.create_subnetwork(name=f"{name}_subnet",
+                                                     network_id=net.id,
+                                                     ip_version="4",
+                                                     cidr=self.address_pool.get_available_subnet(),
+                                                     gateway_ip=self.address_pool.get_first_address())
+        self.address_pool.next()
+        return net
 
     # main function
     def _create_cluster(self, name, flavors_list=[]):
+        '''
+        - network
+        - router private-public
+        - master + slaves + keys (for spark cluster and user access to master)
+        - associate floating ip to master
+        - 
+        '''
+        net = self._create_network(name=name)
+        
         pass
 
 
