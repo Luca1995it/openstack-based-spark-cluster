@@ -153,17 +153,21 @@ class OpenstackDriver:
         - associate floating ip to master
         - 
         '''
+        print("creating network")
         net,subnet = self._create_network(name=name)
         #create router for interconnection
+        print("creating router")
         router = self.conn.network.create_router(name=f"{name}_router")
         public_subnet = self.conn.network.find_subnet(name_or_id="public-subnet")
         self.conn.network.add_interface_to_router(router,subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router,subnet_id=public_subnet.id)
 
+        print("launching master")
         self._create_instance(f'{name}_master',flavor='master_spark_node',network=net.name,wait=True)
 
         i = 0
         for f in flavors_list:
+            print(f"launching slave {i+1}/{len(flavors_list)}")
             self._create_instance(f'{name}_slave{i}',flavor=f,network=net.name,wait=True)
             i+=1
 
