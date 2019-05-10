@@ -164,7 +164,7 @@ class OpenstackDriver:
 
         i = 0
         for f in flavors_list:
-            self._create_instance(f'{name}_slave{i}',flavor=f,network=net.name)
+            self._create_instance(f'{name}_slave{i}',flavor=f,network=net.name,wait=True)
             i+=1
 
 
