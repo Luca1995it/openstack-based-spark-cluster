@@ -1,7 +1,7 @@
 import openstack
 
 DEFAULT_PROJECT = 'apache-spark-cluster-manager'
-DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
+DEFAULT_CLOUD = 'apache-spark-cluster-manager'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
 
 class NetAddr:
