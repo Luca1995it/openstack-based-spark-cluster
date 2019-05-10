@@ -1,12 +1,12 @@
-import React from 'react';
-import {Route, Redirect} from 'react-router-dom';
+import React from 'react'
+import { Route, Redirect } from 'react-router-dom'
 
-const ProtectedRoute = ({ component: Component, ...rest }) => (
+const UnLoggedRoute = ({ component: Component, ...rest }) => (
 
-	<Route {...rest} render={
-        () => { return !rest.token ? <Component {...rest} /> : <Redirect to='/dashboard' />}
-    } />
+    <Route {...rest} render={(props) => {
+        return rest.token ? <Redirect to='/dashboard' /> : <Component {...rest} />; 
+    }} />
 
 );
 
-export default ProtectedRoute;
+export default UnLoggedRoute;

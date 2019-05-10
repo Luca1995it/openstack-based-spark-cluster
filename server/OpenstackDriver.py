@@ -23,7 +23,7 @@ class OpenstackDriver:
     def _init_flavors(self):
         # delete useless flavors
         for f in conn.compute.flavors():
-            conn.compute.delete_flavor(f.id, ignore_missing=True)
+            self.conn.compute.delete_flavor(f.id, ignore_missing=True)
         
         # create the new ones
         conn.compute.create_flavor(
@@ -62,7 +62,7 @@ class OpenstackDriver:
     def _get_images(self):
         return list(conn.compute.images())
 
-    def _create_image(self, filename, image_name, disk_format='raw', container_format='bare', visibility='public'):
+    def _create_image(self, filename, image_name, disk_format='qcow2', container_format='bare', visibility='public'):
         data = open(filename, 'rb').read()
         image_attrs = {
             'name': image_name,

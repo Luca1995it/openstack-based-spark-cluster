@@ -8,8 +8,7 @@ import Navbar from '../Navbar/Navbar';
 import Home from '../Home/Home';
 import Clusters from '../Clusters/Clusters';
 import Pricing from '../Pricing/Pricing';
-import Contacts from '../Contacts/Contacts';
-import Register from '../Register/Register';
+import SshPairs from '../SshPairs/SshPairs';
 
 class Dashboard extends Component {
 
@@ -21,8 +20,7 @@ class Dashboard extends Component {
                     <Switch>
                         <Route path='/dashboard/clusters' component={Clusters} />
                         <Route path='/dashboard/pricing' component={Pricing} />
-                        <Route path='/dashboard/contacts' component={Contacts} />
-                        <Route path='/dashboard/register' component={Register} />
+                        <Route path='/dashboard/sshpairs' component={SshPairs} />
                         <Route path='/dashboard*' component={Home} />
                     </Switch>
                 </Container>

@@ -14,6 +14,7 @@ class Login extends Component {
         password: "",
         isLoading: false,
         error: false,
+        registered: false
     }
 
     constructor(props){
@@ -34,11 +35,15 @@ class Login extends Component {
             .then(res => {
                 let result = res.data;
                 switch (result.status) {
-                    case "OK":
+                    case "OK":                        
                         this.props.setToken(result.token);
+                        this.setState({
+                            ...this.state,
+                            isLoading: false
+                        });
                         break;
                     case "MALFORMED_JSON":
-                    case "MISSING_AUTH_PARAMS":
+                    case "MISSING_PARAMS":
                     case "WRONG_AUTH_PARAMS":
                     default:
                         this.setState({

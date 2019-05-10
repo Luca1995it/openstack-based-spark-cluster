@@ -1,0 +1,18 @@
+.error_bar {
+	background: #C0B283;
+	border-radius: 3px;
+	border-width: 5px;
+	border-color: black;
+	height: auto;
+    width: stretch !important;
+	padding-top: 10px !important;
+	padding-bottom: 10px;
+	text-align: center;
+	margin-top: -20px !important;
+	margin-left: -20px !important;
+	margin-bottom: 10px;
+	-webkit-transition: 1s;
+	-moz-transition: 1s;
+	-o-transition: 1s;
+	transition: 1s;
+}

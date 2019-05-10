@@ -54,7 +54,15 @@ export default class Navbar extends Component {
 					activeItem: 'contacts'
 				})
 				break;
-			}
+            }
+            
+            case 'sshpairs':{
+                this.setState({
+                    ...this.state,
+                    activeItem: 'sshpairs'
+                })
+                break;
+            }
 
 			default:{
 				this.setState({
@@ -90,24 +98,24 @@ export default class Navbar extends Component {
 				</Menu.Item>
 
                 <Menu.Item
-					name='pricing'
+					name='sshpairs'
 					as={Link}
-					to={'/dashboard/pricing'}
-					active={this.state.activeItem === 'pricing'}
+                    to={'/dashboard/sshpairs'}
+                    active={this.state.activeItem === 'sshpairs'}
 					className='noSubItem'
 					>
-					<span className='navText'>Pricing</span>
+					<span className='navText'>Ssh Pairs</span>
 				</Menu.Item>
 
                 <Menu.Item
-					name='contacts'
-					as={Link}
-					to={'/dashboard/contacts'}
-					active={this.state.activeItem === 'contacts'}
-					className='noSubItem'
-					>
-					<span className='navText'>Contacts</span>
-				</Menu.Item>
+                    name='pricing'
+                    as={Link}
+                    to={'/dashboard/pricing'}
+                    active={this.state.activeItem === 'pricing'}
+                    className='noSubItem'
+                >
+                    <span className='navText'>Pricing</span>
+                </Menu.Item>
 
 				<Menu.Item className='sign'>
 					<Button className='logoutButton' fluid basic onClick={()=>this.props.setToken(undefined)}><span>Logout</span></Button>

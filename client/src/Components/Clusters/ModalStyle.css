@@ -1,0 +1,56 @@
+.dimmed.dimmable>.ui.animating.dimmer, .dimmed.dimmable>.ui.visible.dimmer, .ui.active.dimmer {
+	display: -ms-flexbox !important;
+	display: flex !important;
+	opacity: 1;
+}
+
+.ui.active.modal {
+	margin: 0 !important;
+}
+
+.listBtns>.ui.button {
+	background-color: transparent !important;
+	border-left: 1px solid rgba(34, 36, 38, 0.08);
+}
+
+.listBtns>.ui.button.options:hover {
+	color: blue !important;
+}
+
+.listBtns>.ui.active.button.options {
+	color: blue !important;
+}
+
+.listBtns>.ui.button.modify:hover {
+	color: orange !important;
+}
+
+.listBtns>.ui.active.button.modify:focus {
+	color: orange !important;
+}
+
+.listBtns>.ui.button.delete:hover {
+	color: red !important;
+}
+
+.listBtns>.ui.button.delete:focus {
+	color: red !important;
+}
+
+.listBtns>.ui.dropdown .menu>.item:hover{
+	color: blue !important;
+}
+
+.topBtns {
+	padding: 10px !important;
+	background-color: transparent !important;
+	border: 1px solid rgba(34, 36, 38, 0.15) !important;
+}
+
+.newDocument:hover {
+	color: teal !important
+}
+
+.genCSV:hover {
+	color: green !important
+}
