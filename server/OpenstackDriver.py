@@ -129,7 +129,7 @@ class OpenstackDriver:
                                                      cidr=self.address_pool.get_available_subnet(),
                                                      gateway_ip=self.address_pool.get_first_address())
         self.address_pool.next()
-        return net
+        return net,subnet
 
     # main function
     def _create_cluster(self, name, flavors_list=[]):
@@ -140,9 +140,11 @@ class OpenstackDriver:
         - associate floating ip to master
         - 
         '''
-        net = self._create_network(name=name)
+        net,subnet = self._create_network(name=name)
+        #create router for interconnection
+        router = self.conn.network.create_router(name=f"{name}_router")
+        openstack.network.v2._proxy.Proxy.add_interface_to_router(router,subnet_id=subnet.id)
         
-        pass
 
 
 
