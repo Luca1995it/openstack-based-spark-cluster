@@ -129,6 +129,21 @@ class OpenstackDriver:
                                                      cidr=self.address_pool.get_available_subnet())#,gateway_ip=self.address_pool.get_first_address()
         return net,subnet
 
+    def _create_instance(self,name,flavor='small_spark_node',image='xenial-server-cloud-16.04',network='public',wait=False):
+        #todo add keypair
+        img = self.conn.compute.find_image(image)
+        flv = self.conn.compute.find_flavor(flavor)
+        net = self.conn.network.find_network(network)
+
+        server = self.conn.compute.create_server(name=name,
+                                                 image_id=img.id,
+                                                 flavor_id=flv.id,
+                                                 networks=[{'uuid':net.id}])
+
+        if wait:
+            server=self.conn.compute.wait_for_server(server)
+        return server
+
     # main function
     def _create_cluster(self, name, flavors_list=[]):
         '''
@@ -145,7 +160,9 @@ class OpenstackDriver:
         self.conn.network.add_interface_to_router(router,subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router,subnet_id=public_subnet.id)
 
-        
+        s = self._create_instance('master',flavor='master_spark_node',network=net.name,wait=True)
+
+
 
         
 
