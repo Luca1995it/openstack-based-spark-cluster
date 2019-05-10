@@ -159,6 +159,7 @@ class OpenstackDriver:
         print("creating router")
         router = self.conn.network.create_router(name=f"{name}_router")
         public_subnet = self.conn.network.find_subnet(name_or_id="public-subnet")
+        print(public_subnet)
         self.conn.network.add_interface_to_router(router,subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router,subnet_id=public_subnet.id)
 
