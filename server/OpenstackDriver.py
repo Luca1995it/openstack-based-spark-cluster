@@ -160,7 +160,13 @@ class OpenstackDriver:
         self.conn.network.add_interface_to_router(router,subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router,subnet_id=public_subnet.id)
 
-        s = self._create_instance('master',flavor='master_spark_node',network=net.name,wait=True)
+        self._create_instance(f'{name}_master',flavor='master_spark_node',network=net.name,wait=True)
+
+        i = 0
+        for f in flavors_list:
+            self._create_instance(f'{name}_slave{i}',flavor=f,network=net.name)
+            i+=1
+
 
 
 
