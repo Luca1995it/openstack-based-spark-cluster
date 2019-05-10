@@ -1,7 +1,7 @@
 import openstack
 
 DEFAULT_PROJECT = 'apache-spark-cluster-manager'
-DEFAULT_CLOUD = 'apache-spark-cluster-manager'
+DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
 
 class NetAddr:
@@ -123,7 +123,7 @@ class OpenstackDriver:
 
     def _create_network(self,name=""):
         net = self.conn.network.create_network(name=f"{name}_network")
-        subnet = self.conn.network.create_subnetwork(name=f"{name}_subnet",
+        subnet = self.conn.network.create_subnet(name=f"{name}_subnet",
                                                      network_id=net.id,
                                                      ip_version="4",
                                                      cidr=self.address_pool.get_available_subnet(),
