@@ -15,7 +15,7 @@ class NetAddr:
         self.mask = mask
 
     def get_available_subnet(self):
-        res = f"{self.curr_o1}.{self.curr_o2}.{self.curr_o3}.{self.curr_o4}/{mask}"
+        res = f"{self.curr_o1}.{self.curr_o2}.{self.curr_o3}.{self.curr_o4}/{self.mask}"
         return res
 
     def get_first_address(self):
