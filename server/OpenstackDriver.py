@@ -126,9 +126,7 @@ class OpenstackDriver:
         subnet = self.conn.network.create_subnet(name=f"{name}_subnet",
                                                      network_id=net.id,
                                                      ip_version="4",
-                                                     cidr=self.address_pool.get_available_subnet(),
-                                                     gateway_ip=self.address_pool.get_first_address())
-        self.address_pool.next()
+                                                     cidr=self.address_pool.get_available_subnet())#,gateway_ip=self.address_pool.get_first_address()
         return net,subnet
 
     # main function
@@ -143,7 +141,12 @@ class OpenstackDriver:
         net,subnet = self._create_network(name=name)
         #create router for interconnection
         router = self.conn.network.create_router(name=f"{name}_router")
-        openstack.network.v2._proxy.Proxy.add_interface_to_router(router,subnet_id=subnet.id)
+        public_subnet = self.conn.network.find_subnet(name_or_id="public-subnet")
+        self.conn.network.add_interface_to_router(router,subnet_id=subnet.id)
+        self.conn.network.add_interface_to_router(router,subnet_id=public_subnet.id)
+
+        
+
         
 
 
