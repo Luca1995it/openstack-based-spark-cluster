@@ -86,7 +86,7 @@ class OpenstackDriver:
     def _get_images(self):
         return list(self.conn.compute.images())
 
-    def _create_image(self, filename, image_name, disk_format='raw', container_format='bare', visibility='public'):
+    def _create_image(self, filename, image_name, disk_format='qcow2', container_format='bare', visibility='public'):
         data = open(filename, 'rb').read()
         image_attrs = {
             'name': image_name,

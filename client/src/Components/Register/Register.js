@@ -3,7 +3,7 @@ import { Button, Form, Message, Header, Icon, Label } from 'semantic-ui-react';
 import axios from 'axios';
 import config from '../../Config.json';
 import './Register.css';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 
 class Register extends Component {
 
@@ -13,13 +13,23 @@ class Register extends Component {
         password: "",
         email: "",
         isLoading: false,
-        error: false
+        error: false,
+        registered: false
     }
 
     constructor(props) {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.isFormReady = this.isFormReady.bind(this);
+    }
+
+    componentDidMount(){
+        this.setState({
+            ...this.state,
+            registered: false,
+            isLoading: false,
+            error: false
+        });
     }
 
     handleSubmit() {
@@ -31,29 +41,32 @@ class Register extends Component {
                 username: this.state.username,
                 password: this.state.password,
                 email: this.state.email
-            })
-                .then(res => {
-                    let result = res.data;
-                    switch (result.status) {
-                        case "OK":
-                            this.props.setToken(result.token);
-                            break;
-                        case "MALFORMED_JSON":
-                        case "MISSING_AUTH_PARAMS":
-                        case "WRONG_AUTH_PARAMS":
-                        default:
+            }).then(res => {
+                let result = res.data;
+                switch (result.status) {
+                    case "OK":
+                        this.setState({
+                            ...this.state,
+                            isLoading: false,
+                            registered: true
+                        });
+                        break;
+                    case "MALFORMED_JSON":
+                    case "MISSING_AUTH_PARAMS":
+                    case "WRONG_AUTH_PARAMS":
+                    default:
+                        this.setState({
+                            ...this.state,
+                            message: result.message,
+                            error: true
+                        }, () => setTimeout(() => {
                             this.setState({
                                 ...this.state,
-                                message: result.message,
-                                error: true
-                            }, () => setTimeout(() => {
-                                this.setState({
-                                    ...this.state,
-                                    message: undefined,
-                                    error: false
-                                });
-                            }, 3000));
-                            break;
+                                message: undefined,
+                                error: false
+                            });
+                        }, 3000));
+                        break;
                     }
                 })
                 .catch(err => {
@@ -80,6 +93,7 @@ class Register extends Component {
     }
 
     render() {
+        if (this.state.registered) return <Redirect to='/login' />
         return <div className="containerLogin">
             <div className="middleDiv">
                 <Header inverted size='huge'>
@@ -104,7 +118,7 @@ class Register extends Component {
                         onKeyPress={(e) => (e.key === 'Enter') && this.isFormReady() ? this.handleSubmit() : null} />
 
                     <Form.Input
-                        fluid icon='lock' iconPosition='left'
+                        fluid icon='mail' iconPosition='left'
                         placeholder='Email' type='text'
                         value={this.state.email}
                         onChange={(e) => this.setState({ ...this.state, email: e.target.value })}
