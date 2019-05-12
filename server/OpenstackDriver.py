@@ -319,7 +319,7 @@ class OpenstackDriver:
         - 7) set up slave
         '''
         # create the keypair to allow the master access the slaves
-        cluster_private_key, cluster_public_key = self._create_ssh_pair(name)
+        cluster_private_key, cluster_public_key = self._create_ssh_pair()
 
         # create the network for the cluster
         network, router = self._create_cluster_dedicated_network(name)
