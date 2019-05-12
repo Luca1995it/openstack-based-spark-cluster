@@ -66,7 +66,8 @@ export default class CreateCluster extends Component {
         }, () => axios.post('/api/clusters', {
                 ...this.state.cluster,
                 name: this.state.cluster.name,
-                flavors: this.state.cluster.flavors.map(obj => ({id: obj.id, quantity: obj.quantity}))
+                flavors: this.state.cluster.flavors.map(obj => ({name: obj.name, quantity: obj.quantity})),
+                key: this.state.cluster.key
             }).then(res => {
                 this.setState({
                     ...this.state,
@@ -124,17 +125,19 @@ export default class CreateCluster extends Component {
                                     <Table.HeaderCell>vCPUs</Table.HeaderCell>
                                     <Table.HeaderCell>RAM</Table.HeaderCell>
                                     <Table.HeaderCell>Disk</Table.HeaderCell>
+                                    <Table.HeaderCell>Swap</Table.HeaderCell>
                                     <Table.HeaderCell>Quantity</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
                             <Table.Body>
-                            {this.state.cluster.flavors.filter(obj => obj.name !== 'master').map(f => 
+                                {this.state.cluster.flavors.filter(obj => !obj.name.startsWith('master')).map(f => 
                                 <Table.Row key={f.id}>
                                     <Table.Cell>{f.name}</Table.Cell>
                                     <Table.Cell>{f.vcpus}</Table.Cell>
                                     <Table.Cell>{`${f.ram} MB`}</Table.Cell>
                                     <Table.Cell>{`${f.disk} GB`}</Table.Cell>
+                                    <Table.Cell>{`${f.swap} GB`}</Table.Cell>
                                     <Table.Cell><Form.Input
                                         type='number'
                                         min="0" max="3"

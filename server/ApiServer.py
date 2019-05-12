@@ -7,6 +7,7 @@ import hashlib
 from bson.objectid import ObjectId
 import secrets
 import time
+import threading
 
 # Token setup
 TOKEN_EXPIRATION_SECONDS = 7200
@@ -18,10 +19,10 @@ users = db.users
 clusters = db.clusters
 sshpairs = db.sshpairs
 
-'''
+
 import OpenstackDriver as osdriver
 openstackdriver = osdriver.OpenstackDriver()
-'''
+
 
 # Server setup
 HOST_NAME = 'localhost'
@@ -220,33 +221,19 @@ def process(id):
 def process():
     
     results = []
-    #for c in clus:
-    #    results.append(osdriver.)
-    return {
-        'flavors' : [
-            {
-                'name': 'master',
-                'ram': 1024,
-                'vcpus': 1,
-                'disk': 4,
-                'id': 'master_flavor_id'
-            },
-            {
-                'name': 'small_slave',
-                'ram': 2048,
-                'vcpus': 1,
-                'disk': 4,
-                'id': 'small_slave_flavor_id'
-            },
-            {
-                'name': 'medium_slave',
-                'ram': 3072,
-                'vcpus': 2,
-                'disk': 6,
-                'id': 'medium_slave_flavor_id'
-            }
-        ]
-    }
+    flavors = openstackdriver._get_flavors()
+
+    for f in flavors:
+        results.append({
+            "name": f.name, 
+            "ram": f.ram,
+            "vcpus": f.vcpus,
+            "disk": f.disk, 
+            "swap": f.swap,
+            "id": f.id
+        })
+    return results
+    
 
 
 ############################### CLUSTERS ######################################
@@ -281,20 +268,24 @@ def process():
     token = request.get_header('X-CSRF-Token')
     user = users.find_one({'token': token})
 
-    if 'name' not in parameters or 'flavors' not in parameters or len(parameters['flavors']) == 0:
+    if 'name' not in parameters or 'flavors' not in parameters or len(parameters['flavors']) == 0 or 'key' not in parameters:
         return {
             'status': "MISSING_PARAMS",
             'message': 'name or flavors missing'
         }
 
-    #
-    # create cluster openstack
-    #
+    # get ssh key selected by the user
+    key = sshpairs.find_one({'_id': ObjectId(parameters['key'])})
 
-    clusters.insert_one({'user_id': user['_id'], 'name': parameters['name'], 'flavors': parameters['flavors']})
-    results = []
+    flavors_names_list = []
+    for flavor in parameters['flavors']:
+        flavors_names_list += int(flavor['quantity']) * [flavor['name']]
+    cluster = openstackdriver._create_cluster(parameters['name'], key['key'], flavors_names_list)
+
+    # add cluster to database
+    clusters.insert_one({'user_id': user['_id'], 'name': parameters['name'], 'cluster': cluster})
     
-    return "ok"
+    return "OK"
 
 
 # Create a new cluster with the given parameters
@@ -303,12 +294,13 @@ def process():
 def process(id):
     token = request.get_header('X-CSRF-Token')
     user = users.find_one({'token': token})
-
-    #
-    # delete cluster on openstack
-    #
-
+    # find the cluster to be deleted
+    result = clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
+    # destroy the cluster on openstack
+    openstackdriver._delete_cluster(result['cluster'])
+    # remove the entry from the database
     clusters.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
+
     return "OK"
 
 
