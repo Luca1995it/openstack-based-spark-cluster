@@ -235,7 +235,7 @@ class OpenstackDriver:
 
     # create a floating ip from the network pool
     def _create_floating_ip(self, network):
-        return self.conn.network.create_ip(floating_network_id=self.network.id)
+        return self.conn.network.create_ip(floating_network_id=network.id)
 
     # create and link a floating ip to a given instance
     def _add_floating_ip_to_instance(self, instance, network):
