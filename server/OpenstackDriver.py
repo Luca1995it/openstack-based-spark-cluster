@@ -1,8 +1,13 @@
 import openstack
+import os
+import base64
+from oslo_utils import encodeutils
+import paramiko
 
 DEFAULT_PROJECT = 'apache-spark-cluster-manager'
 DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
+MAX_TRIES = 100
 
 class NetAddr:
 
@@ -51,11 +56,11 @@ class OpenstackDriver:
         
         # create the new ones
         self.conn.compute.create_flavor(
-            name='small_spark_node', ram=2048, vcpus=1, disk=4)
+            name='small-spark-node', ram=2048, vcpus=1, disk=4)
         self.conn.compute.create_flavor(
-            name='medium_spark_node', ram=3078, vcpus=2, disk=6)
+            name='medium-spark-node', ram=3078, vcpus=2, disk=6)
         self.conn.compute.create_flavor(
-            name='master_spark_node', ram=1024, vcpus=1, disk=4)
+            name='master-spark-node', ram=1024, vcpus=1, disk=4)
 
     def _init_group(self):
         group = self.conn.identity.find_group(DEFAULT_GROUPNAME)
@@ -120,16 +125,57 @@ class OpenstackDriver:
     def _get_subnets(self):
         return list(self.conn.network.subnets())
 
+    def _setup_master(self, master, user_ssh_key, cluster_keypair):
+        #floating_ip = master.floating_ip  # ????
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        #ssh.connect(floating_ip, pkey=paramiko.RSAKey.from_private_key_file('.ssh/spark_private.key'))
+        tries = 0
+        while tries < MAX_TRIES:
+            try:
+                ssh.connect('172.24.4.20', pkey=paramiko.RSAKey.from_private_key_file('.ssh/spark_private.key'))
+                break
+            except:
+                tries += 1
+        ssh.exec_command('cd ~/.ssh && echo "%s" >> id_rsa' % cluster_keypair.private_key)
+        ssh.exec_command('cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=$(hostname -I)" > spark-env.sh')
+        ssh.exec_command('cd ~/.ssh && echo "%s" >> authorized_keys' % user_ssh_key)
+
+    def _setup_slave(self, master, slave, net, cluster_keypair):
+        #floating_ip = master.floating_ip  # ????
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        #ssh.connect(floating_ip, pkey=paramiko.RSAKey.from_private_key_file('.ssh/spark_private.key'))
+        tries = 0
+        while tries < MAX_TRIES:
+            try:
+                ssh.connect('172.24.4.20', pkey=paramiko.RSAKey.from_private_key_file(
+                    '.ssh/spark_private.key'))
+                break
+            except:
+                tries += 1
+        master_ip = master.addresses[net.name][0]['addr']
+        ssh.exec_command('cd ~/.ssh && echo "%s" >> authorized_keys' % cluster_keypair.public_key)
+        ssh.exec_command('cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=%s" > spark-env.sh' % master_ip)
+
+    def _create_keypair(self, name=""):
+        return conn.compute.create_keypair(name=name)
 
     def _create_network(self,name=""):
         net = self.conn.network.create_network(name=f"{name}_network")
         subnet = self.conn.network.create_subnet(name=f"{name}_subnet",
-                                                     network_id=net.id,
-                                                     ip_version="4",
-                                                     cidr=self.address_pool.get_available_subnet())#,gateway_ip=self.address_pool.get_first_address()
-        return net,subnet
+                                                 network_id=net.id,
+                                                 ip_version="4",
+                                                 cidr=self.address_pool.get_available_subnet())#,gateway_ip=self.address_pool.get_first_address()
+        return net, subnet
 
-    def _create_instance(self,name,flavor='small_spark_node',image='xenial-server-cloud-16.04',network='public',wait=False):
+    def _create_instance(self,
+                         name,
+                         flavor='small-spark-node',
+                         image='xenial-spark-ready-image',
+                         network='public',
+                         security_group='spark-security-group ',
+                         wait=False):
         #todo add keypair
         img = self.conn.compute.find_image(image)
         flv = self.conn.compute.find_flavor(flavor)
@@ -138,39 +184,57 @@ class OpenstackDriver:
         server = self.conn.compute.create_server(name=name,
                                                  image_id=img.id,
                                                  flavor_id=flv.id,
-                                                 networks=[{'uuid':net.id}])
+                                                 networks=[{'uuid':net.id}],
+                                                 security_groups=[{'name': security_group}])
 
+        # forse spostare questo dopo aver fatto partire tutte le istanze....
         if wait:
             server=self.conn.compute.wait_for_server(server)
         return server
 
+    def _wait_istances(self, istances_list=[]):
+        for i in istances_list:
+            self.conn.compute.wait_for_server(i)
+
     # main function
-    def _create_cluster(self, name, flavors_list=[]):
+    def _create_cluster(self, name, main_ssh_key, flavors_list=[]):
         '''
+        - keypair
         - network
         - router private-public
         - master + slaves + keys (for spark cluster and user access to master)
         - associate floating ip to master
         - 
         '''
+        print("creating keypair")
+        keypair = self._create_keypair(name)
+
         print("creating network")
-        net,subnet = self._create_network(name=name)
+        net, ubnet = self._create_network(name=name)
+
         #create router for interconnection
         print("creating router")
         router = self.conn.network.create_router(name=f"{name}_router")
+        # dato che la public è sempre la stessa, spostiamo sta definizione nell'init?
         public_subnet = self.conn.network.find_subnet(name_or_id="public-subnet")
         print(public_subnet)
         self.conn.network.add_interface_to_router(router,subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router,subnet_id=public_subnet.id)
 
         print("launching master")
-        self._create_instance(f'{name}_master',flavor='master_spark_node',network=net.name,wait=True)
+        master = self._create_instance(f'{name}_master', flavor='master-spark-node', network=net.name, wait=True)
+
+        self._setup_master(master, main_ssh_key, keypair)
 
         i = 0
-        for f in flavors_list:
-            print(f"launching slave {i+1}/{len(flavors_list)}")
-            self._create_instance(f'{name}_slave{i}',flavor=f,network=net.name,wait=True)
-            i+=1
+        slaves = [self._create_instance(f'{name}_slave{i}', flavor=f, network=net.name, wait=True) for f in flavors_list]
+        #print(f"launching slave {i+1}/{len(flavors_list)}")
+            
+        self._wait_istances(slaves)
+
+        for s in slaves:
+            self._setup_slave(master, s, net, keypair)
+            
 
 
 
