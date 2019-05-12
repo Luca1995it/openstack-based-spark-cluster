@@ -34,10 +34,11 @@ class NetAddr:
 
 
 class Cluster:
-    def __init__(self, master_id, network_id, slaves_ids=[]):
+    def __init__(self, master_id, router_id, network_id, slaves_ids=[]):
         self.master_id = master_id
         self.slaves_ids = slaves_ids
         self.network_id = network_id
+        self.router_id = router_id
 
 
 class OpenstackDriver:
