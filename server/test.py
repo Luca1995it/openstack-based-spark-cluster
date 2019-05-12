@@ -1,4 +1,8 @@
 import OpenstackDriver
 
 d = OpenstackDriver.OpenstackDriver()
-d._create_cluster("test", "", ["small-spark-node", "medium-spark-node"])
+clus = d._create_cluster("test", "", ["small-spark-node", "medium-spark-node"])
+
+print(clus)
+
+#d._init_flavors()
