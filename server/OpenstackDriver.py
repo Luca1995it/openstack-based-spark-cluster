@@ -285,8 +285,8 @@ class OpenstackDriver:
 
 
     def _delete_cluster_dedicated_network(self, network_id, router_id):
-        self.conn.network.delete_network(network_id)
         self.conn.network.delete_router(router_id)
+        self.conn.network.delete_network(network_id)
 
 
     def _setup_cluster(self, master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key):
