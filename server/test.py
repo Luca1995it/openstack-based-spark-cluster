@@ -1,4 +1,4 @@
 import OpenstackDriver
 
 d = OpenstackDriver.OpenstackDriver()
-d._create_cluster("test",["small_spark_node","medium_spark_node"])
+d._create_cluster("test", "", ["small-spark-node", "medium-spark-node"])

@@ -319,7 +319,7 @@ class OpenstackDriver:
         - 7) set up slave
         '''
         # create the keypair to allow the master access the slaves
-        cluster_private_key, cluster_public_key = self._create_keypair(name)
+        cluster_private_key, cluster_public_key = self._create_ssh_pair(name)
 
         # create the network for the cluster
         network, router = self._create_cluster_dedicated_network(name)
@@ -327,7 +327,6 @@ class OpenstackDriver:
         # launch the master
         master = self._create_instance(f'{name}_master', flavor_name='master-spark-node', network_name=network.name)
         
-
         # launch the slaves
         slaves = []
         for i in range(len(flavors_names_list)):
