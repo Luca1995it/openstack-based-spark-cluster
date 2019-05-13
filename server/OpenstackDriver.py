@@ -417,6 +417,11 @@ class OpenstackDriver:
         line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
         return int(re.search("\d",str(line)).group(0))
 
+    def _get_server_spark_status(self,server)
+        ip = self._get_floating_ip_from_instance_and_network(server) #todo
+        resp = requests.get(f"http://{ip}:8080/api/v1/application").content
+        soup = bs(resp)
+        return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
 
 
     # main function
