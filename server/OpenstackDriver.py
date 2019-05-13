@@ -207,9 +207,6 @@ class OpenstackDriver:
         return None
 
 
-    
-
-
     def _create_network(self,name=""):
         net = self.conn.network.create_network(name=f"{name}_network")
         subnet = self.conn.network.create_subnet(name=f"{name}_subnet",
@@ -323,7 +320,7 @@ class OpenstackDriver:
 
         # start spark in master mode
         ssh.exec_command('/usr/local/spark/sbin/start-master.sh')
-    
+        print("Master set up correctly!")
 
     def _setup_slave(self, slave, master, network, cluster_public_key):
         print("Waiting for slave to be ready")
@@ -337,7 +334,7 @@ class OpenstackDriver:
         # get floating ips to be able to connect to instances
         print("Retrieving master fixed ip")
         master_fixed_ip = self._get_fixed_ip_instance(master, network)
-        print("Slave floating ip: ", slave_floating_ip, master_fixed_ip)
+        print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)
         # reset /etc/hosts file
@@ -360,7 +357,7 @@ class OpenstackDriver:
             "/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory $(($(awk '/MemTotal / {print $2}' /proc/meminfo)-300000))K")
 
         print("Revoking floating ip from slave instance")
-        self._remove_floating_ip_from_instance(slave, self.public_net)
+        self._remove_floating_ip_from_instance(slave, network)
 
     # main function
     def _create_cluster(self, name, user_ssh_key):
