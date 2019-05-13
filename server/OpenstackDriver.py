@@ -353,7 +353,7 @@ class OpenstackDriver:
         ssh.exec_command(
             f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST={master_fixed_ip}" > spark-env.sh')
         # start spark in slave mode
-        starting_memory = int(conn.compute.find_flavor(slave.flavor['id']).ram) - 256
+        starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - 256
         ssh.exec_command(
             f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M")
 
