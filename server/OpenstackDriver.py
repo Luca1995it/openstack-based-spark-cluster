@@ -110,7 +110,7 @@ class OpenstackDriver:
 
     def _init_floating_ips(self):
         for fip in self.conn.network.ips():
-            conn.network.delete_ip(fip)
+            self.conn.network.delete_ip(fip)
 
         
     def _init_networks(self):
@@ -288,7 +288,7 @@ class OpenstackDriver:
 
 
     def _instance_status(self, server_id):
-        return conn.compute.find_server(server_id).status
+        return self.conn.compute.find_server(server_id).status
 
 
     def _wait_istances(self, istances_list=[]):
