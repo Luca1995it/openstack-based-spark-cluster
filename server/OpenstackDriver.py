@@ -267,8 +267,7 @@ class OpenstackDriver:
         floating_ip = self._create_floating_ip(network)
         print("Created floating ip", floating_ip)
         print("Adding floating ip to instance: ", instance.name)
-        self.conn.compute.add_floating_ip_to_server(
-            instance, address=floating_ip.floating_ip_address)
+        self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
 
     # release a floating ip
     def _remove_floating_ip(self, floating_ip):
@@ -331,7 +330,7 @@ class OpenstackDriver:
         # add floating ip to the master
         self._add_floating_ip_to_instance(master, self.public_net)
         # update master instance
-        master = self.conn.compute.get_server(master.id)
+        master = self.conn.compute.find_server(master.id)
         print("Master addresses", master.addresses)
 
         print("Waiting for instances to be ready")
