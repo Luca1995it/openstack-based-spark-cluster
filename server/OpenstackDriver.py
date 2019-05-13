@@ -34,6 +34,7 @@ class NetAddr:
         self.next_o3 += 1
 
 
+# classes that will be used with the client web-app to simplify communications
 class Cluster:
     def __init__(self, name, master_id, subnet_id, network_id, router_id, slaves_ids, cluster_private_key, cluster_public_key):
         self.name = name
@@ -45,9 +46,27 @@ class Cluster:
         self.cluster_private_key = cluster_private_key
         self.cluster_public_key = cluster_public_key
 
+class Flavor:
+    def __init__(self, flavor):
+        self.name = flavor.name,
+        self.ram = flavor.ram,
+        self.vcpus = flavor.vcpus,
+        self.disk = flavor.disk,
+        self.swap = flavor.swap,
+        self.id = flavor.id
 
+class Instance:
+    def __init__(self, instance, private_ips=[], public_ips=[]):
+        self.name = instance.name
+        self.status = instance.status
+        self.id = instance.id
+        self.private_ips = private_ips
+        self.public_ips = public_ips
+
+
+# main openstack driver to interact with vms
 class OpenstackDriver:
-    # I created a cloud entry in the file on the server at /etc/openstack/cloud.yaml to speed up the connection
+    # there is a cloud entry in the file on the server at /etc/openstack/cloud.yaml to speed up the connection
     # otherwise one should specify all the parameters like username, psw, region, endpoint_url, ...
     def __init__(self, cloud=DEFAULT_CLOUD, project=DEFAULT_PROJECT, init_all=False):
         self.default_cloud = cloud
@@ -63,7 +82,8 @@ class OpenstackDriver:
 
 
     def _completely_reset_project(self):
-        # this function will cancel and re-create all the projects, flavors, instances, groups and users
+        # this function will cancel and re-create all the projects, flavors, instances, ips, groups and users
+        # use with care !!!
         self._init_flavors()
         self._init_group()
         self._init_instances()
@@ -76,7 +96,6 @@ class OpenstackDriver:
         # delete useless flavors
         for f in self.conn.compute.flavors():
             self.conn.compute.delete_flavor(f.id, ignore_missing=True)
-        
         # create the new ones
         self.conn.compute.create_flavor(
             name='small-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
@@ -88,24 +107,28 @@ class OpenstackDriver:
 
     def _init_group(self):
         group = self.conn.identity.find_group(DEFAULT_GROUPNAME)
+        # if group exists, delete and create again
         if group:
             self.conn.identity.delete_group(group.id)
         self.conn.identity.create_group(name=DEFAULT_GROUPNAME, description="Default group for the Apache Spark Cluster Manager project")
 
 
     def _init_instances(self):
+        # delete all instances!
         for instance in self.conn.compute.servers():
             self.conn.compute.delete_server(instance.id)
 
 
     def _init_project(self):
         proj = self.conn.identity.find_project(self.default_project)
+        # if project exists, delete and create it again
         if proj:
             self.conn.identity.delete_project(proj.id)
-            self.conn.identity.create_project(name=DEFAULT_PROJECT, description="Apache Spark Cluster Manager default project", is_enabled=True)
+        self.conn.identity.create_project(name=DEFAULT_PROJECT, description="Apache Spark Cluster Manager default project", is_enabled=True)
 
 
     def _init_users(self):
+        # delete all users....this should never be used. it does not create the "ascm" user again
         proj_id = self._get_project_id()
         for user in self.conn.identity.users():
             if user.default_project_id == proj_id:
@@ -114,6 +137,7 @@ class OpenstackDriver:
 
 
     def _init_floating_ips(self):
+        # delete all floating ips
         for fip in self.conn.network.ips():
             self.conn.network.delete_ip(fip)
 
@@ -153,12 +177,13 @@ class OpenstackDriver:
         self.conn.image.upload_image(**image_attrs)
 
 
+    # get default project id
     def _get_project_id(self):
         return self.conn.identity.find_project(self.default_project).id
 
-
+    # get a list of flavors (to be shown in the web-app)
     def _get_flavors(self):
-        return list(self.conn.compute.flavors())
+        return [Flavor(f) for f in self.conn.compute.flavors()]
 
 
     def _get_networks(self):
@@ -169,6 +194,7 @@ class OpenstackDriver:
         return list(self.conn.network.subnets())
 
 
+    # create a pair of ssh-keys
     def _create_ssh_pair(self):
         key = RSA.generate(2048, os.urandom)
         private = key.exportKey()
@@ -176,6 +202,7 @@ class OpenstackDriver:
         return private.decode(), public.decode()
 
     # create an instance of an ssh connection that will be used to set up the nodes of the cluster
+    # this function tries up to MAX_TRIES times to connect, because ubuntu takes some time to be ready
     def _get_ssh_connection(self, host, key_file='./spark_private.key'):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -192,7 +219,7 @@ class OpenstackDriver:
         return None
 
     # network should be the network dedicated to the cluster, not the public one
-    def _get_fixed_ip_instance(self, instance, network):
+    def _get_fixed_ip_from_instance_and_network(self, instance, network):
         if network.name in instance.addresses:
             for addr in instance.addresses[network.name]:
                 if addr['OS-EXT-IPS:type'] == 'fixed':
@@ -200,7 +227,7 @@ class OpenstackDriver:
         return None
     
     # network should be the network dedicated to the cluster, not the public one
-    def _get_floating_ip_instance(self, instance, network):
+    def _get_floating_ip_from_instance_and_network(self, instance, network):
         if network.name in instance.addresses:
             for addr in instance.addresses[network.name]:
                 if addr['OS-EXT-IPS:type'] == 'floating':
@@ -229,7 +256,7 @@ class OpenstackDriver:
         self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
         return floating_ip.floating_ip_address
 
-    # release a floating ip
+    # release a floating ip and delete che istance
     def _remove_floating_ip(self, floating_ip):
         self.conn.network.delete_ip(floating_ip)
 
@@ -252,8 +279,16 @@ class OpenstackDriver:
         self.conn.compute.delete_server(instance_id)
 
 
-    def _instance_status(self, server_id):
-        return self.conn.compute.find_server(server_id).status
+    def _get_instance_info(self, server_id):
+        server = self.conn.compute.find_server(server_id)
+        public_ips, private_ips = [], []
+        for network, ips in server.addresses:
+            for ip in ips:
+                if ip['OS-EXT-IPS:type'] == 'fixed':
+                    private_ips.append(ip['addr'])
+                elif ip['OS-EXT-IPS:type'] == 'floating':
+                    public_ips.append(ip['addr'])
+        return Instance(server, private_ips, public_ips)
 
 
     def _wait_instance(self, instance):
@@ -330,7 +365,7 @@ class OpenstackDriver:
 
         # get floating ips to be able to connect to instances
         print("Retrieving master fixed ip")
-        master_fixed_ip = self._get_fixed_ip_instance(master, network)
+        master_fixed_ip = self._get_fixed_ip_from_instance_and_network(master, network)
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)

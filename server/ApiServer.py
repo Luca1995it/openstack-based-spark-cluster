@@ -39,7 +39,6 @@ class EnableCors(object):
             if request.method != 'OPTIONS':
                 # actual request; reply with the actual response
                 return fn(*args, **kwargs)
-
         return _enable_cors
 
 
@@ -121,9 +120,8 @@ def process():
 # Authentication function for all the protected operations
 def require_api_token(func):
     def check_token(*args, **kwargs):
-        
         token = request.get_header('X-CSRF-Token')
-        #print(request, token)
+        # print(request, token)
         # Check to see if it's in their session
         if not 'token':
             # Token was not inserted in the request
@@ -131,7 +129,6 @@ def require_api_token(func):
                 'status': "MISSING_TOKEN",
                 'message': "Token is missing"
             }
-
         user = db.users.find_one({'token': token})
         if user is None:
             # Token is not valid
@@ -139,14 +136,12 @@ def require_api_token(func):
                 'status': "INVALID_TOKEN",
                 'message': "The token does not correspond to a user"
             }
-
         elif time.time() - user['token_time'] > TOKEN_EXPIRATION_SECONDS:
             # Token has expired
             return {
                 'status': "TOKEN_EXPIRED",
                 'message': "Token has expired, please log in again"
             }
-
         else:
             # Otherwise just send them where they wanted to go
             return func(*args, **kwargs)
@@ -204,17 +199,7 @@ def process(id):
 @app.route('/api/flavors', method=['OPTIONS', 'GET'])
 @require_api_token
 def process():
-    flavors = openstackdriver._get_flavors()
-    results = [{
-            "name": f.name, 
-            "ram": f.ram,
-            "vcpus": f.vcpus,
-            "disk": f.disk, 
-            "swap": f.swap,
-            "id": f.id
-    } for f in flavors]
-    return results
-
+    return openstackdriver._get_flavors()
 
 
 ############################### CLUSTERS ######################################
@@ -231,8 +216,8 @@ def process(id):
         }
     # get single cluster
     else:
-        clusters = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
-        return 
+        cluster = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
+        return cluster
 
 # Create a new cluster with the given parameters
 @app.route('/api/clusters', method=['OPTIONS', 'POST'])
@@ -276,6 +261,18 @@ def process(id):
 
     return "OK"
 
+
+############################### INSTANCE ######################################
+# Get single / list of clusters of the user with actual token
+@app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
+@require_api_token
+def process(id):
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
+    # get all clusters of this user
+    if id:
+        return openstackdriver._get_instance_info(id)
+    return None
 
 
 
