@@ -301,10 +301,10 @@ class OpenstackDriver:
             self.conn.compute.wait_for_server(i)
 
     
-    def _wait_instance_for_floating_ip(self, instance, timeout=60, step=5):
+    def _wait_instance_for_floating_ip(self, instance, network, timeout=60, step=5):
         for i in range(int(timeout/step)):
             instance = self.conn.compute.find_server(instance.id)
-            if self._get_floating_ip_instance(instance) is not None:
+            if self._get_floating_ip_instance(instance, network) is not None:
                 return instance
             sleep(step)
         print("Waiting for floating IP timed out")
@@ -345,7 +345,7 @@ class OpenstackDriver:
         self._add_floating_ip_to_instance(master, self.public_net)
         
         # update master instance and wait for the floating ip address
-        master = self._wait_instance_for_floating_ip(master)
+        master = self._wait_instance_for_floating_ip(master, self.public_net)
         print("Master addresses", master.addresses)
         
         print("Setting up the master node")
@@ -356,8 +356,8 @@ class OpenstackDriver:
         # associate floating ips to all slaves to reach them and setting them up, then revoke floating ips
         for slave in slaves:
             def _setup_slave_and_ips(s):
-                self._add_floating_ip_to_instance(s, self.public_subnet, self.public_net)
-                s = self.conn.compute.get_server(s)
+                self._add_floating_ip_to_instance(s, self.public_net)
+                s = self._wait_instance_for_floating_ip(s, self.public_net)
                 self._setup_slave(s, master, network, cluster_public_key)
                 self._remove_floating_ip_from_instance(s, self.public_net)
                 print(s)
