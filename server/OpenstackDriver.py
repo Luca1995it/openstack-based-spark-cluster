@@ -183,7 +183,7 @@ class OpenstackDriver:
                 ssh.connect(host, key_filename=key_file, timeout=5)
                 return ssh
             except Exception as e:
-                print(e)
+                print("Master not yet ready:", e)
                 tries += 1
             sleep(5)
         return None
@@ -392,7 +392,7 @@ class OpenstackDriver:
 
 
     # add a slave to the cluster
-    def _add_node(self, cluster, flavor_name='small-spark-node'):
+    def _add_slave(self, cluster, flavor_name='small-spark-node'):
         print("Create slave", flavor_name)
         # retrieve the master
         master = self.conn.compute.find_server(cluster.master_id)
