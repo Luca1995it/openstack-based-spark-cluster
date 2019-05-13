@@ -279,7 +279,7 @@ class OpenstackDriver:
     def _create_cluster_dedicated_network(self, name):
         network, subnet = self._create_network(name=name)
         # create router for interconnection
-        router = self.conn.network.create_router(name=f"{name}_router")
+        router = self.conn.network.create_router(name=f"{name}_router", external_gateway_info={'network_id': self.public_net.id})
         # adding two interfaces to the router to connect the public network with the cluster network
         self.conn.network.add_interface_to_router(router, subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router, subnet_id=self.public_subnet.id)
