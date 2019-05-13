@@ -294,7 +294,9 @@ class OpenstackDriver:
     def _setup_cluster(self, master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key):
         print("Adding floating ip to master")
         # add floating ip to the master
-        self._add_floating_ip_to_instance(master, self.public_subnet, self.public_net)
+        self._add_floating_ip_to_instance(master.id, self.public_subnet, self.public_net)
+        # update master instance
+        master = self.conn.compute.get_server(master.id)
         print(master.addresses)
 
         print("Waiting for instances to be ready")
@@ -308,12 +310,13 @@ class OpenstackDriver:
         print("Setting up slaves")
         # associate floating ips to all slaves to reach them and setting them up, then revoke floating ips
         for slave in slaves:
-            def _setup_slave_and_ips():
-                self._add_floating_ip_to_instance(slave, self.public_subnet, self.public_net)
-                self._setup_slave(slave, master, network, cluster_public_key)
-                self._remove_floating_ip_from_instance(slave, self.public_net)
-                print(slave)
-            threading.Thread(target=_setup_slave_and_ips).start()
+            def _setup_slave_and_ips(s):
+                self._add_floating_ip_to_instance(s, self.public_subnet, self.public_net)
+                s = self.conn.compute.get_server(s)
+                self._setup_slave(s, master, network, cluster_public_key)
+                self._remove_floating_ip_from_instance(s, self.public_net)
+                print(s)
+            threading.Thread(target=_setup_slave_and_ips, args=(slave)).start()
         print("Done setup")
             
 
