@@ -90,7 +90,7 @@ class OpenstackDriver:
 
     def _init_instances(self):
         for instance in self.conn.compute.servers():
-            self.conn.compute.delete_instance(instance)
+            self.conn.compute.delete_server(instance.id)
 
 
     def _init_project(self):
