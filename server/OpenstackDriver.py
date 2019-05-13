@@ -178,9 +178,11 @@ class OpenstackDriver:
         tries = 0
         while tries < MAX_TRIES:
             try:
+                print("Connection trial number ", tries)
                 ssh.connect(host, pkey=paramiko.RSAKey.from_private_key_file(key_file), timeout=5)
                 return ssh
-            except:
+            except Exception as e:
+                print(e)
                 tries += 1
             sleep(5)
         return None
@@ -346,6 +348,7 @@ class OpenstackDriver:
         print("Master floating ip: ", master_floating_ip)
         print("Trying to connect to master")
         ssh = self._get_ssh_connection(master_floating_ip)
+        print("Connected to master!")
         # private key to master, the public key will be copied to the slaves.
         # master must be able to access slaves with ssh and no password
         ssh.exec_command(
