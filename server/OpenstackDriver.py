@@ -182,7 +182,10 @@ class OpenstackDriver:
     # connect to the master and set it up. finally start a spark master instance
     def _setup_master(self, master, network, user_ssh_key, cluster_private_key):
         # get floating ips to be able to connect
+        print("Retrieving new floating ip for master")
         master_floating_ip = self._get_floating_ip_instance(master, network)
+        print("Master floating ip: ", master_floating_ip)
+
         ssh = self._get_ssh_connection(master_floating_ip)
         # private key to master, the public key will be copied to the slaves.
         # master must be able to access slaves with ssh and no password
@@ -207,10 +210,10 @@ class OpenstackDriver:
 
     def _setup_slave(self, slave, master, network, cluster_public_key):
         # get floating ips to be able to connect to instances
-        print("Slave ips")
+        print("Retrieving slave ip")
         slave_floating_ip = self._get_floating_ip_instance(slave, network)
         master_fixed_ip = self._get_fixed_ip_instance(master, network)
-        print(slave_floating_ip, master_fixed_ip)
+        print("IPS:", slave_floating_ip, master_fixed_ip)
         ssh = self._get_ssh_connection(slave_floating_ip)
         # reset /etc/hosts file
         ssh.exec_command('sudo rm /etc/hosts')
@@ -237,11 +240,14 @@ class OpenstackDriver:
 
     # create a floating ip from the network pool
     def _create_floating_ip(self, subnet, network):
+        print("Creating floating ip")
         return self.conn.network.create_ip(subnet_id=subnet.id, floating_network_id=network.id)
 
     # create and link a floating ip to a given instance
     def _add_floating_ip_to_instance(self, instance, subnet, network):
         floating_ip = self._create_floating_ip(subnet, network)
+        print("Created floating ip", floating_ip)
+        print("Adding floating ip to instance: ", instance.name)
         self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
 
     # release a floating ip
