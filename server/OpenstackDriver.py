@@ -172,7 +172,7 @@ class OpenstackDriver:
         return private.decode(), public.decode()
 
     # create an instance of an ssh connection that will be used to set up the nodes of the cluster
-    def _get_ssh_connection(self, host, key_file='~/.ssh/spark_private.key'):
+    def _get_ssh_connection(self, host, key_filename='./spark_private.key'):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         tries = 0
@@ -202,8 +202,6 @@ class OpenstackDriver:
                 if addr['OS-EXT-IPS:type'] == 'floating':
                     return addr['addr']
         return None
-
-    
 
 
     def _setup_slave(self, slave, master, network, cluster_public_key):
