@@ -15,9 +15,6 @@ TOKEN_EXPIRATION_SECONDS = 7200
 # MongoDB connection setup
 client = MongoClient('localhost', 27017)
 db = client.ascm
-clusters = db.clusters
-sshpairs = db.sshpairs
-
 
 import OpenstackDriver as osdriver
 openstackdriver = osdriver.OpenstackDriver()
@@ -164,15 +161,11 @@ def require_api_token(func):
 def process():
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
-
-    sshp = sshpairs.find({'user_id': user['_id']})
-    results = {
-        'sshpairs': []
+    sshp = db.sshpairs.find({'user_id': user['_id']})
+    results = [{'name': s['name'], 'id': str(s['_id'])} for s in sshp]
+    return {
+        'sshpairs': results
     }
-
-    for s in sshp:
-        results['sshpairs'].append({'name': s['name'], 'id': str(s['_id']) })
-    return results
 
 # Insert a new key for the current user
 @app.route('/api/sshpairs', method=['OPTIONS', 'POST'])
@@ -185,20 +178,15 @@ def process():
             'status': "MALFORMED_JSON",
             'message': "Malformed JSON body in request"
         }
-    print(parameters)
     if 'name' not in parameters or 'key' not in parameters:
         return {
             'status': "MISSING_PARAMS",
             'message': 'name or key missing'
         }
-
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
-
-    sshpairs.insert_one({'user_id': user['_id'], 'name': parameters['name'], 'key': parameters['key']})
-
+    db.sshpairs.insert_one({'user_id': user['_id'], 'name': parameters['name'], 'key': parameters['key']})
     return "ok"
-
 
 # Delete a key for the current user
 @app.route('/api/sshpairs/<id>', method=['OPTIONS', 'DELETE'])
@@ -206,9 +194,7 @@ def process():
 def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
-
-    sshpairs.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
-
+    db.sshpairs.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
     return "ok"
 
 
@@ -218,41 +204,42 @@ def process(id):
 @app.route('/api/flavors', method=['OPTIONS', 'GET'])
 @require_api_token
 def process():
-    
-    results = []
     flavors = openstackdriver._get_flavors()
-
-    for f in flavors:
-        results.append({
+    results = [{
             "name": f.name, 
             "ram": f.ram,
             "vcpus": f.vcpus,
             "disk": f.disk, 
             "swap": f.swap,
             "id": f.id
-        })
+    } for f in flavors]
     return results
-    
+
 
 
 ############################### CLUSTERS ######################################
-# Get list of clusters of the user with actual token
-@app.route('/api/clusters', method=['OPTIONS', 'GET'])
+# Get single / list of clusters of the user with actual token
+@app.route('/api/clusters/<id>', method=['OPTIONS', 'GET'])
 @require_api_token
-def process():
+def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
-
-    clusters = db.cluster
-    return {
-        'clusters': list(
-            map(
-                lambda a: {'name': a['name'], 'id': str(a['_id']), 'flavors': list(map(lambda f: {'quantity': f['quantity'], 'id': str(f['id'])}, a['flavors']))},
-                clusters.find({'user_id': user['_id']})
+    # get all clusters of this user
+    if id is None:
+        {
+            'clusters': list(
+                map(
+                    lambda a: {'name': a['name'], 'id': str(a['_id']), 'flavors': list(
+                        map(lambda f: {'quantity': f['quantity'], 'id': str(f['id'])}, a['flavors']))},
+                    db.clusters.find({'user_id': user['_id']})
+                )
             )
-        )
-    }
-
+        }
+    # get single cluster
+    else:
+        pass
+    clusters = db.cluster
+    return 
 
 # Create a new cluster with the given parameters
 @app.route('/api/clusters', method=['OPTIONS', 'POST'])
@@ -273,19 +260,15 @@ def process():
             'status': "MISSING_PARAMS",
             'message': 'name or key missing'
         }
-
     # get ssh key selected by the user
-    key = sshpairs.find_one({'_id': ObjectId(parameters['key'])})
-
+    key = db.sshpairs.find_one({'_id': ObjectId(parameters['key'])})
     cluster = openstackdriver._create_cluster(parameters['name'], key['key'])
-
     # add cluster to database
     db.clusters.insert_one({'user_id': user['_id'], 'cluster': cluster})
-    
+
     return "OK"
 
-
-# Create a new cluster with the given parameters
+# Delete a cluster given the id
 @app.route('/api/clusters/<id>', method=['OPTIONS', 'DELETE'])
 @require_api_token
 def process(id):
@@ -296,7 +279,7 @@ def process(id):
     # destroy the cluster on openstack
     openstackdriver._delete_cluster(result['cluster'])
     # remove the entry from the database
-    clusters.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
+    db.clusters.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
 
     return "OK"
 
