@@ -78,7 +78,7 @@ class OpenstackDriver:
         self.conn.compute.create_flavor(
             name='medium-spark-node', ram=1536, vcpus=2, disk=8, swap=4096)
         self.conn.compute.create_flavor(
-            name='master-spark-node', ram=512, vcpus=1, disk=8, swap=4096)
+            name='master-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
 
 
     def _init_group(self):
@@ -300,6 +300,16 @@ class OpenstackDriver:
         for i in istances_list:
             self.conn.compute.wait_for_server(i)
 
+    
+    def _wait_instance_for_floating_ip(self, instance, timeout=60, step=5):
+        for i in range(int(timeout/step)):
+            instance = self.conn.compute.find_server(instance.id)
+            if self._get_floating_ip_instance(instance) is not None:
+                return instance
+            sleep(step)
+        print("Waiting for floating IP timed out")
+        return instance
+
 
     def _create_cluster_dedicated_network(self, name):
         network, subnet = self._create_network(name=name)
@@ -326,17 +336,17 @@ class OpenstackDriver:
 
 
     def _setup_cluster(self, master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key):
-        print("Adding floating ip to master")
-        # add floating ip to the master
-        self._add_floating_ip_to_instance(master, self.public_net)
-        # update master instance
-        sleep(5)
-        master = self.conn.compute.find_server(master.id)
-        print("Master addresses", master.addresses)
-
         print("Waiting for instances to be ready")
         # wait for all the nodes to be ready
         self._wait_istances(slaves + [master])
+        
+        print("Adding floating ip to master")
+        # add floating ip to the master
+        self._add_floating_ip_to_instance(master, self.public_net)
+        
+        # update master instance and wait for the floating ip address
+        master = self._wait_instance_for_floating_ip(master)
+        print("Master addresses", master.addresses)
         
         print("Setting up the master node")
         # setup the master
