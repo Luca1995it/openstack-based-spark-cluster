@@ -185,7 +185,7 @@ class OpenstackDriver:
                 ssh.connect(host, key_filename=key_file, timeout=5)
                 return ssh
             except Exception as e:
-                print("Master not yet ready:", e)
+                print("Instance not yet ready:", e)
                 tries += 1
             sleep(5)
         return None
