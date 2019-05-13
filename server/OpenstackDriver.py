@@ -233,8 +233,8 @@ class OpenstackDriver:
         self.conn.network.delete_ip(floating_ip)
 
     # unlink a floating ip with a given instance and destroy the floating ip
-    def _remove_floating_ip_from_instance(self, instance, network):
-        floating_ip = self.conn.network.find_ip(self._get_floating_ip_instance(instance, network))
+    def _remove_floating_ip_from_instance(self, instance, slave_floating_ip):
+        floating_ip = self.conn.network.find_ip(slave_floating_ip)
         self.conn.compute.remove_floating_ip_from_server(instance, address=floating_ip.floating_ip_address)
         self._remove_floating_ip(floating_ip)
 
@@ -358,7 +358,7 @@ class OpenstackDriver:
             f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M")
 
         print("Revoking floating ip from slave instance")
-        self._remove_floating_ip_from_instance(slave, network)
+        self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
     # main function
     def _create_cluster(self, name, user_ssh_key):
