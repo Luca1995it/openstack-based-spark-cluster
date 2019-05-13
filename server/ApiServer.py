@@ -226,20 +226,13 @@ def process(id):
     user = db.users.find_one({'token': token})
     # get all clusters of this user
     if id is None:
-        {
-            'clusters': list(
-                map(
-                    lambda a: {'name': a['name'], 'id': str(a['_id']), 'flavors': list(
-                        map(lambda f: {'quantity': f['quantity'], 'id': str(f['id'])}, a['flavors']))},
-                    db.clusters.find({'user_id': user['_id']})
-                )
-            )
+        return {
+            'clusters': list(db.clusters.find({'user_id': user['_id']}))
         }
     # get single cluster
     else:
-        pass
-    clusters = db.cluster
-    return 
+        clusters = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
+        return 
 
 # Create a new cluster with the given parameters
 @app.route('/api/clusters', method=['OPTIONS', 'POST'])

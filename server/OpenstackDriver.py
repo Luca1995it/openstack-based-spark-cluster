@@ -257,7 +257,7 @@ class OpenstackDriver:
 
 
     def _wait_instance(self, instance):
-        self.conn.compute.wait_for_server(instance)
+        self.conn.compute.wait_for_server(instance, wait=240)
 
 
     def _create_cluster_dedicated_network(self, name):
