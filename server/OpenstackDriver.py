@@ -4,6 +4,9 @@ import paramiko
 from time import sleep
 from Crypto.PublicKey import RSA
 import threading
+import re 
+from bs4 import BeautifulSoup as bs
+import requests
 
 DEFAULT_PROJECT = 'apache-spark-cluster-manager'
 DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
@@ -351,6 +354,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
+        self._set_server_metadata(master,"status","ready")
         print("Master set up correctly!")
 
 
@@ -391,7 +395,28 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
+        self._set_server_metadata(slave,"status","ready")
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
+
+    def _set_server_metadata(self,server,key,value):
+        self.conn.compute._set_server_metadata(server,**{key:value})
+
+
+    def _get_server_metadata(self,server,key=None):
+        update = self.conn.compute.get_server_metadata(server)
+        if key != None:
+            return update.metadata["key"]
+
+        return update.metadata
+
+
+    def _get_server_running_application_number(self,server):
+        ip = self._get_floating_ip_from_instance_and_network(server) #todo
+        resp = requests.get(f"http://{ip}:8080/api/v1/application").content
+        soup = bs(resp)
+        line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
+        return int(re.search("\d",str(line)).group(0))
+
 
 
     # main function
