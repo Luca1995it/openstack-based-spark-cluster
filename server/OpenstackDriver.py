@@ -204,7 +204,7 @@ class OpenstackDriver:
         print("Retrieving new floating ip for master")
         master_floating_ip = self._get_floating_ip_instance(master, network)
         print("Master floating ip: ", master_floating_ip)
-
+        print("Trying to connect to master")
         ssh = self._get_ssh_connection(master_floating_ip)
         # private key to master, the public key will be copied to the slaves.
         # master must be able to access slaves with ssh and no password
@@ -330,6 +330,7 @@ class OpenstackDriver:
         # add floating ip to the master
         self._add_floating_ip_to_instance(master, self.public_net)
         # update master instance
+        sleep(5)
         master = self.conn.compute.find_server(master.id)
         print("Master addresses", master.addresses)
 
