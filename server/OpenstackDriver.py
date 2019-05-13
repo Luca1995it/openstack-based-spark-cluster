@@ -115,13 +115,13 @@ class OpenstackDriver:
         
     def _init_networks(self):
         # delete routers
-        for router in conn.network.routers():
+        for router in self.conn.network.routers():
             # first remove all interfaces
-            for p in conn.network.ports():
+            for p in self.conn.network.ports():
                 if p.device_id == router.id:
                     if p.device_owner == 'network:router_interface':
-                        conn.network.remove_interface_from_router(router, port_id=p.id)
-            conn.network.delete_router(router)
+                        self.conn.network.remove_interface_from_router(router, port_id=p.id)
+            self.conn.network.delete_router(router)
         # delete subnetwork apart from the public one
         for sub in self.conn.network.subnets():
             if sub.name != 'public-subnet':
