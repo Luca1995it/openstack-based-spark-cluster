@@ -187,16 +187,18 @@ class OpenstackDriver:
 
     # network should be the network dedicated to the cluster, not the public one
     def _get_fixed_ip_instance(self, instance, network):
-        for addr in instance.addresses[network.name]:
-            if addr['OS-EXT-IPS:type'] == 'fixed':
-                return addr['addr']
+        if network.name in instance.addresses:
+            for addr in instance.addresses[network.name]:
+                if addr['OS-EXT-IPS:type'] == 'fixed':
+                    return addr['addr']
         return None
     
     # network should be the network dedicated to the cluster, not the public one
     def _get_floating_ip_instance(self, instance, network):
-        for addr in instance.addresses[network.name]:
-            if addr['OS-EXT-IPS:type'] == 'floating':
-                return addr['addr']
+        if network.name in instance.addresses:
+            for addr in instance.addresses[network.name]:
+                if addr['OS-EXT-IPS:type'] == 'floating':
+                    return addr['addr']
         return None
 
     # connect to the master and set it up. finally start a spark master instance
