@@ -74,11 +74,11 @@ class OpenstackDriver:
         
         # create the new ones
         self.conn.compute.create_flavor(
-            name='small-spark-node', ram=1024, vcpus=1, disk=5, swap=2048)
+            name='small-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
         self.conn.compute.create_flavor(
-            name='medium-spark-node', ram=1536, vcpus=2, disk=8, swap=2048)
+            name='medium-spark-node', ram=1536, vcpus=2, disk=8, swap=4096)
         self.conn.compute.create_flavor(
-            name='master-spark-node', ram=512, vcpus=1, disk=5, swap=2048)
+            name='master-spark-node', ram=512, vcpus=1, disk=8, swap=4096)
 
 
     def _init_group(self):
@@ -236,12 +236,12 @@ class OpenstackDriver:
         return net, subnet
 
     # create a floating ip from the network pool
-    def _create_floating_ip(self, network):
-        return self.conn.network.create_ip(floating_network_id=network.id)
+    def _create_floating_ip(self, subnet, network):
+        return self.conn.network.create_ip(subnet_id=subnet.id, floating_network_id=network.id)
 
     # create and link a floating ip to a given instance
-    def _add_floating_ip_to_instance(self, instance, network):
-        floating_ip = self._create_floating_ip(network)
+    def _add_floating_ip_to_instance(self, instance, subnet, network):
+        floating_ip = self._create_floating_ip(subnet, network)
         self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
 
     # release a floating ip
@@ -309,7 +309,7 @@ class OpenstackDriver:
         # associate floating ips to all slaves to reach them and setting them up, then revoke floating ips
         for slave in slaves:
             def _setup_slave_and_ips():
-                self._add_floating_ip_to_instance(slave, self.public_net)
+                self._add_floating_ip_to_instance(slave, self.public_subnet, self.public_net)
                 self._setup_slave(slave, master, network, cluster_public_key)
                 self._remove_floating_ip_from_instance(slave, self.public_net)
                 print(slave)
