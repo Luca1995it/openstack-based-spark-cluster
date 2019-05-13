@@ -112,6 +112,20 @@ class OpenstackDriver:
         for fip in self.conn.network.ips():
             conn.network.delete_ip(fip)
 
+        
+    def _init_networks(self):
+        # delete routers
+        for router in self.conn.network.routers():
+            self.conn.network.delete_router(router.id)
+        # delete subnetwork apart from the public one
+        for sub in self.conn.network.subnets():
+            if sub.name != 'public-subnet':
+                self.conn.network.delete_subnet(sub.id)
+        # delete subnetwork apart from the public one
+        for net in self.conn.network.networks():
+            if net.name != 'public':
+                self.conn.network.delete_network(net.id)
+
 
     def _get_images(self):
         return list(self.conn.compute.images())
