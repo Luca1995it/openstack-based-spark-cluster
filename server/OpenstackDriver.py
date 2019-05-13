@@ -258,17 +258,17 @@ class OpenstackDriver:
         return net, subnet
 
     # create a floating ip from the network pool
-    def _create_floating_ip(self, subnet, network):
-        print("Creating floating ip")
-        return self.conn.network.create_ip(subnet_id=subnet.id, floating_network_id=network.id)
+    def _create_floating_ip(self, network):
+        print("Creating floating ip from network", network)
+        return self.conn.network.create_ip(floating_network_id=network.id)
 
     # create and link a floating ip to a given instance
-    def _add_floating_ip_to_instance(self, instance, subnet, network):
-        floating_ip = self._create_floating_ip(subnet, network)
+    def _add_floating_ip_to_instance(self, instance, network):
+        floating_ip = self._create_floating_ip(network)
         print("Created floating ip", floating_ip)
-        exit()
         print("Adding floating ip to instance: ", instance.name)
-        self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
+        self.conn.compute.add_floating_ip_to_server(
+            instance, address=floating_ip.floating_ip_address)
 
     # release a floating ip
     def _remove_floating_ip(self, floating_ip):
@@ -329,7 +329,7 @@ class OpenstackDriver:
     def _setup_cluster(self, master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key):
         print("Adding floating ip to master")
         # add floating ip to the master
-        self._add_floating_ip_to_instance(master, self.public_subnet, self.public_net)
+        self._add_floating_ip_to_instance(master, self.public_net)
         # update master instance
         master = self.conn.compute.get_server(master.id)
         print("Master addresses", master.addresses)
