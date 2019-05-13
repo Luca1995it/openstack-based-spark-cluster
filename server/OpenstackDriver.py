@@ -115,8 +115,13 @@ class OpenstackDriver:
         
     def _init_networks(self):
         # delete routers
-        for router in self.conn.network.routers():
-            self.conn.network.delete_router(router.id)
+        for router in conn.network.routers():
+            # first remove all interfaces
+            for p in conn.network.ports():
+                if p.device_id == router.id:
+                    if p.device_owner == 'network:router_interface':
+                        conn.network.remove_interface_from_router(router, port_id=p.id)
+            conn.network.delete_router(router)
         # delete subnetwork apart from the public one
         for sub in self.conn.network.subnets():
             if sub.name != 'public-subnet':
@@ -306,9 +311,18 @@ class OpenstackDriver:
         return network, router
 
 
-    def _delete_cluster_dedicated_network(self, network_id, router_id):
-        self.conn.network.delete_router(router_id)
-        self.conn.network.delete_network(network_id)
+    def _delete_cluster_dedicated_network(self, subnet, network, router):
+        # delete all interfaces (ports) associated with this router
+        for p in self.conn.network.ports():
+            if p.device_id == router.id:
+                if p.device_owner == 'network:router_interface':
+                    self.conn.network.remove_interface_from_router(router, port_id=p.id)
+        # delete router
+        self.conn.network.delete_router(router)
+        # delete the subnet
+        self.conn.network.delete_subnet(subnet)
+        # delete the network
+        self.conn.network.delete_network(network)
 
 
     def _setup_cluster(self, master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key):
@@ -381,11 +395,16 @@ class OpenstackDriver:
 
     # delete a cluster given a Cluster instance
     def _delete_cluster(self, cluster):
-        self._delete_cluster_dedicated_network(cluster.network_id, cluster.router_id)
+        # first delete the instances
         for slave_id in cluster.slaves_ids:
             self._delete_instance(slave_id)
         self._delete_instance(cluster.master_id)
-
+        # retrieve instances of nets and routers
+        subnet = self.conn.network.find_subnet(cluster.subnet_id)
+        network = self.conn.network.find_network(cluster.network_id)
+        router = self.conn.network.find_router(cluster.router_id)
+        # delete the cluster
+        self._delete_cluster_dedicated_network(subnet, network, router)
 
         
 
