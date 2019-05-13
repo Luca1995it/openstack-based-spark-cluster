@@ -222,6 +222,7 @@ def process(id):
             'clusters': list(db.clusters.find({'user_id': user['_id']}))
         }
 
+# TODO: Cluster names collision!!!
 # Create a new cluster with the given parameters
 @app.route('/api/clusters', method=['OPTIONS', 'POST'])
 @require_api_token
@@ -276,6 +277,26 @@ def process(id):
     if id:
         return openstackdriver._get_instance_info(id)
     return None
+
+
+@app.route('/api/instance', method=['OPTIONS', 'POST'])
+@require_api_token
+def process(id):
+    try:
+        parameters = json.load(request.body)
+    except json.decoder.JSONDecodeError as error:
+        return {
+            'status': "MALFORMED_JSON",
+            'message': "Malformed JSON body in request"
+        }
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
+
+    if 'flavor_name' not in parameters or 'quantity' not in parameters:
+        return {
+            'status': "MISSING_PARAMS",
+            'message': 'name or key missing'
+        }
 
 
 
