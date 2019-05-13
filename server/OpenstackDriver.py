@@ -34,11 +34,12 @@ class NetAddr:
 
 
 class Cluster:
-    def __init__(self, master_id, router_id, network_id, slaves_ids=[]):
+    def __init__(self, master_id, subnet_id, network_id, router_id, slaves_ids=[]):
         self.master_id = master_id
         self.slaves_ids = slaves_ids
         self.network_id = network_id
         self.router_id = router_id
+        self.subnet_id = subnet_id
 
 
 class OpenstackDriver:
@@ -318,7 +319,7 @@ class OpenstackDriver:
         # adding two interfaces to the router to connect the public network with the cluster network
         self.conn.network.add_interface_to_router(router, subnet_id=subnet.id)
         self.conn.network.add_interface_to_router(router, subnet_id=self.public_subnet.id)
-        return network, router
+        return subnet, network, router
 
 
     def _delete_cluster_dedicated_network(self, subnet, network, router):
@@ -382,7 +383,7 @@ class OpenstackDriver:
         
         print("Create network and router")
         # create the network for the cluster
-        network, router = self._create_cluster_dedicated_network(name)
+        subnet, network, router = self._create_cluster_dedicated_network(name)
         print(network, router)
 
         print("Create master")
@@ -402,7 +403,7 @@ class OpenstackDriver:
         threading.Thread(target=self._setup_cluster, args=(master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key)).start()
         
         # return the Cluster object
-        return Cluster(master.id, network.id, router.id, [slave.id for slave in slaves])
+        return Cluster(master.id, subnet.id, network.id, router.id, [slave.id for slave in slaves])
 
     # delete a cluster given a Cluster instance
     def _delete_cluster(self, cluster):
