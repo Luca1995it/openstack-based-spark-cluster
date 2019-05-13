@@ -10,7 +10,8 @@ class Clusters extends Component {
     state = {
         isLoading: false,
         clusters: [],
-        errorMessage: ""
+        errorMessage: "",
+        status: undefined
     }
 
     constructor(props) {
@@ -20,7 +21,9 @@ class Clusters extends Component {
     }
 
     componentDidMount(){
-        this.refresh()
+        this.setState({
+            ...this.state,
+        }, this.refresh);
     }
 
     refresh() {
@@ -63,19 +66,34 @@ class Clusters extends Component {
         });
     }
 
+    edit(cluster){
+        this.setState({
+            ...this.state,
+            status: cluster
+        });
+    }
+
+    back(){
+        this.setState({
+            ...this.state,
+            status: undefined
+        }, this.refresh);
+    }
+
     render() {
         if (this.state.isLoading) return <Loader active inline='centered' />
+        if (this.state.status) return <ClusterPage back={this.back} cluster={this.status} />
         return (
             <div className='homeContainer'>
                 <div className="homeSubContainer">
                     <Header size='medium'>Manage your clusters</Header>
                     {this.state.errorMessage ? <Label color="red">{this.state.errorMessage}</Label> : null}
-                    <CreateCluster refresh={this.refresh} />
+                    <CreateCluster refresh={this.refresh} disabled={this.state.clusters.length >= 2} setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg})}/>
                     <Divider />
                     <Button circular icon='refresh' labelPosition='right' onClick={this.refresh} />
                     <Divider />
                     <div className='homeAdvices'>
-                        {'There are 4 clusters running!'}
+                        {`There are ${this.state.clusters.length}/2 clusters running!`}
                     </div>
                     <Divider />
                     {this.state.clusters.length > 0 ?
