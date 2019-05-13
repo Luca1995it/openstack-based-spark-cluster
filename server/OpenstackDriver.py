@@ -309,7 +309,7 @@ class OpenstackDriver:
         # reset /etc/hosts file
         ssh.exec_command('sudo rm /etc/hosts')
         ssh.exec_command(
-            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)" | sudo tee - a /etc/hosts')
+            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)" | sudo tee -a /etc/hosts')
 
         # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
         ssh.exec_command(
@@ -340,7 +340,7 @@ class OpenstackDriver:
         # reset /etc/hosts file
         ssh.exec_command('sudo rm /etc/hosts')
         ssh.exec_command(
-            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)\n{master_fixed_ip}\tmaster" | sudo tee - a /etc/hosts')
+            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)\n{master_fixed_ip}\tmaster" | sudo tee -a /etc/hosts')
 
         # private key to master, the public key will be copied to the slaves.
         # master must be able to access slaves with ssh and no password
@@ -353,8 +353,9 @@ class OpenstackDriver:
         ssh.exec_command(
             f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST={master_fixed_ip}" > spark-env.sh')
         # start spark in slave mode
+        starting_memory = int(conn.compute.find_flavor(slave.flavor['id']).ram) - 256
         ssh.exec_command(
-            "/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory $(($(awk '/MemTotal / {print $2}' /proc/meminfo)-300000))K")
+            f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M")
 
         print("Revoking floating ip from slave instance")
         self._remove_floating_ip_from_instance(slave, network)
