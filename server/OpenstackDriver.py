@@ -420,7 +420,7 @@ class OpenstackDriver:
 
 
     def _add_node(self, cluster, flavor_name):
-
+        pass
 
         
 '''
