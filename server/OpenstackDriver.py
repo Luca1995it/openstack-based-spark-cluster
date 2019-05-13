@@ -300,7 +300,7 @@ class OpenstackDriver:
     def _setup_cluster(self, master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key):
         print("Adding floating ip to master")
         # add floating ip to the master
-        self._add_floating_ip_to_instance(master.id, self.public_subnet, self.public_net)
+        self._add_floating_ip_to_instance(master, self.public_subnet, self.public_net)
         # update master instance
         master = self.conn.compute.get_server(master.id)
         print(master.addresses)
