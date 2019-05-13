@@ -34,7 +34,7 @@ class NetAddr:
 
 
 class Cluster:
-    def __init__(self, master_id, subnet_id, network_id, router_id, slaves_ids=[]):
+    def __init__(self, master_id, subnet_id, network_id, router_id, slaves_ids, cluster_private_key, cluster_public_key):
         self.master_id = master_id
         self.slaves_ids = slaves_ids
         self.network_id = network_id
@@ -201,33 +201,7 @@ class OpenstackDriver:
                     return addr['addr']
         return None
 
-    # connect to the master and set it up. finally start a spark master instance
-    def _setup_master(self, master, network, user_ssh_key, cluster_private_key):
-        # get floating ips to be able to connect
-        print("Retrieving new floating ip for master")
-        master_floating_ip = self._get_floating_ip_instance(master, network)
-        print("Master floating ip: ", master_floating_ip)
-        print("Trying to connect to master")
-        ssh = self._get_ssh_connection(master_floating_ip)
-        # private key to master, the public key will be copied to the slaves.
-        # master must be able to access slaves with ssh and no password
-        ssh.exec_command(f'cd ~/.ssh && echo "{cluster_private_key}" >> id_rsa')
-        ssh.exec_command('cd ~/.ssh && chmod 400 id_rsa')
-
-        # set python3 for pyspark
-        ssh.exec_command('export PYSPARK_PYTHON=python3')
-
-        # reset /etc/hosts file
-        ssh.exec_command('sudo rm /etc/hosts')
-        ssh.exec_command(f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)" | sudo tee - a /etc/hosts')
-
-        # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
-        ssh.exec_command('cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=$(hostname -I)" > spark-env.sh')
-        # let user access the master of the cluster with his key
-        ssh.exec_command(f'cd ~/.ssh && echo "{user_ssh_key}" >> authorized_keys')
-
-        # start spark in master mode
-        ssh.exec_command('/usr/local/spark/sbin/start-master.sh')
+    
 
 
     def _setup_slave(self, slave, master, network, cluster_public_key):
@@ -271,6 +245,7 @@ class OpenstackDriver:
         print("Created floating ip", floating_ip)
         print("Adding floating ip to instance: ", instance.name)
         self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
+        return floating_ip.floating_ip_address
 
     # release a floating ip
     def _remove_floating_ip(self, floating_ip):
@@ -302,16 +277,6 @@ class OpenstackDriver:
     def _wait_istances(self, istances_list=[]):
         for i in istances_list:
             self.conn.compute.wait_for_server(i)
-
-    
-    def _wait_instance_for_floating_ip(self, instance, network, timeout=60, step=5):
-        for i in range(int(timeout/step)):
-            instance = self.conn.compute.find_server(instance.id)
-            if self._get_floating_ip_instance(instance, network) is not None:
-                return instance
-            sleep(step)
-        print("Waiting for floating IP timed out")
-        return instance
 
 
     def _create_cluster_dedicated_network(self, name):
@@ -345,10 +310,10 @@ class OpenstackDriver:
         
         print("Adding floating ip to master")
         # add floating ip to the master
-        self._add_floating_ip_to_instance(master, self.public_net)
+        #self._add_floating_ip_to_instance(master, self.public_net)
         
         # update master instance and wait for the floating ip address
-        master = self._wait_instance_for_floating_ip(master, self.public_net)
+        #master = self._wait_instance_for_floating_ip(master, self.public_net)
         print("Master addresses", master.addresses)
         
         print("Setting up the master node")
@@ -359,8 +324,8 @@ class OpenstackDriver:
         # associate floating ips to all slaves to reach them and setting them up, then revoke floating ips
         for slave in slaves:
             def _setup_slave_and_ips(s):
-                self._add_floating_ip_to_instance(s, self.public_net)
-                s = self._wait_instance_for_floating_ip(s, self.public_net)
+                #self._add_floating_ip_to_instance(s, self.public_net)
+                #s = self._wait_instance_for_floating_ip(s, self.public_net)
                 self._setup_slave(s, master, network, cluster_public_key)
                 self._remove_floating_ip_from_instance(s, self.public_net)
                 print(s)
@@ -368,16 +333,52 @@ class OpenstackDriver:
         print("Done setup")
             
 
+    # connect to the master and set it up. finally start a spark master instance
+    def _setup_master(self, master, network, user_ssh_key, cluster_private_key):
+        print("Waiting for master to be ready")
+        # wait for all the nodes to be ready
+        self._wait_istances([master])
+
+        print("Adding floating ip to master")
+        # add floating ip to the master
+        master_floating_ip = self._add_floating_ip_to_instance(master, self.public_net)
+
+        print("Master floating ip: ", master_floating_ip)
+        print("Trying to connect to master")
+        ssh = self._get_ssh_connection(master_floating_ip)
+        # private key to master, the public key will be copied to the slaves.
+        # master must be able to access slaves with ssh and no password
+        ssh.exec_command(
+            f'cd ~/.ssh && echo "{cluster_private_key}" >> id_rsa')
+        ssh.exec_command('cd ~/.ssh && chmod 400 id_rsa')
+
+        # set python3 for pyspark
+        ssh.exec_command('export PYSPARK_PYTHON=python3')
+
+        # reset /etc/hosts file
+        ssh.exec_command('sudo rm /etc/hosts')
+        ssh.exec_command(
+            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)" | sudo tee - a /etc/hosts')
+
+        # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
+        ssh.exec_command(
+            'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=$(hostname -I)" > spark-env.sh')
+        # let user access the master of the cluster with his key
+        ssh.exec_command(
+            f'cd ~/.ssh && echo "{user_ssh_key}" >> authorized_keys')
+
+        # start spark in master mode
+        ssh.exec_command('/usr/local/spark/sbin/start-master.sh')
+    
+
     # main function
-    def _create_cluster(self, name, user_ssh_key, flavors_names_list=[]):
+    def _create_cluster(self, name, user_ssh_key):
         '''
         - 1) keypair
         - 2) network + router private-public
         - 3) master
         - 4) associate floating ip to master
         - 5) set up master
-        - 6) slaves
-        - 7) set up slave
         '''
         print("Create keypair")
         # create the keypair to allow the master access the slaves
@@ -392,20 +393,14 @@ class OpenstackDriver:
         # launch the master
         master = self._create_instance(f'{name}_master', flavor_name='master-spark-node', network_name=network.name)
         print(master)
-
-        print("Creating slaves")
-        # launch the slaves
-        slaves = []
-        for i in range(len(flavors_names_list)):
-            slaves.append(self._create_instance(f'{name}_slave{i}', flavor_name=flavors_names_list[i], network_name=network.name))
-        print(slaves)
         
-        print("Starting threads")
+        print("Starting thread")
         # instances launched, configuring them in an other thread to return asap the results to the client
-        threading.Thread(target=self._setup_cluster, args=(master, slaves, network, user_ssh_key, cluster_private_key, cluster_public_key)).start()
+        threading.Thread(target=self._setup_master, args=(master, network, user_ssh_key, cluster_private_key)).start()
         
         # return the Cluster object
-        return Cluster(master.id, subnet.id, network.id, router.id, [slave.id for slave in slaves])
+        return Cluster(master.id, subnet.id, network.id, router.id, [], cluster_private_key, cluster_public_key)
+
 
     # delete a cluster given a Cluster instance
     def _delete_cluster(self, cluster):
@@ -421,7 +416,14 @@ class OpenstackDriver:
         self._delete_cluster_dedicated_network(subnet, network, router)
 
         
-
+'''
+print("Creating slaves")
+        # launch the slaves
+        slaves = []
+        for i in range(len(flavors_names_list)):
+            slaves.append(self._create_instance(f'{name}_slave{i}', flavor_name=flavors_names_list[i], network_name=network.name))
+        print(slaves)
+'''
 
 
 
