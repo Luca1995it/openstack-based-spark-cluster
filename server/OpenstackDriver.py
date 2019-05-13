@@ -9,6 +9,7 @@ DEFAULT_PROJECT = 'apache-spark-cluster-manager'
 DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
 MAX_TRIES = 100
+RESERVED_RAM = 256 # RAM to reserve for the OS in MB
 
 
 class NetAddr:
@@ -212,7 +213,7 @@ class OpenstackDriver:
         subnet = self.conn.network.create_subnet(name=f"{name}_subnet",
                                                  network_id=net.id,
                                                  ip_version="4",
-                                                 cidr=self.address_pool.get_available_subnet())#,gateway_ip=self.address_pool.get_first_address()
+                                                 cidr=self.address_pool.get_available_subnet())
         return net, subnet
 
     # create a floating ip from the network pool
@@ -297,30 +298,26 @@ class OpenstackDriver:
         print("Trying to connect to master")
         ssh = self._get_ssh_connection(master_floating_ip)
         print("Connected to master!")
-        # private key to master, the public key will be copied to the slaves.
-        # master must be able to access slaves with ssh and no password
-        ssh.exec_command(
-            f'cd ~/.ssh && echo "{cluster_private_key}" >> id_rsa')
-        ssh.exec_command('cd ~/.ssh && chmod 400 id_rsa')
 
-        # set python3 for pyspark
-        ssh.exec_command('export PYSPARK_PYTHON=python3')
-
-        # reset /etc/hosts file
-        ssh.exec_command('sudo rm /etc/hosts')
-        ssh.exec_command(
-            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)" | sudo tee -a /etc/hosts')
-
-        # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
-        ssh.exec_command(
-            'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=$(hostname -I)" > spark-env.sh')
-        # let user access the master of the cluster with his key
-        ssh.exec_command(
-            f'cd ~/.ssh && echo "{user_ssh_key}" >> authorized_keys')
-
-        # start spark in master mode
-        ssh.exec_command('/usr/local/spark/sbin/start-master.sh')
+        commands = [
+            # private key to master, the public key will be copied to the slaves.
+            f'cd ~/.ssh && echo "{cluster_private_key}" >> id_rsa',
+            # master must be able to access slaves with ssh and no password. private key must have permissions 400
+            f'cd ~/.ssh && chmod 400 id_rsa',
+            # reset /etc/hosts file
+            f'sudo rm /etc/hosts',
+            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)" | sudo tee -a /etc/hosts',
+            # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
+            f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=$(hostname -I)" > spark-env.sh',
+            # let user access the master of the cluster with his key
+            f'cd ~/.ssh && echo "{user_ssh_key}" >> authorized_keys',
+            # start spark in master mode
+            f'/usr/local/spark/sbin/start-master.sh'
+        ]
+        
+        ssh.exec_command("\n".join(commands))
         print("Master set up correctly!")
+
 
     def _setup_slave(self, slave, master, network, cluster_public_key):
         print("Waiting for slave to be ready")
@@ -337,28 +334,30 @@ class OpenstackDriver:
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)
-        # reset /etc/hosts file
-        ssh.exec_command('sudo rm /etc/hosts')
-        ssh.exec_command(
-            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)\n{master_fixed_ip}\tmaster" | sudo tee -a /etc/hosts')
+        print("Connected to slave!")
 
-        # private key to master, the public key will be copied to the slaves.
-        # master must be able to access slaves with ssh and no password
-        ssh.exec_command(
-            f'cd ~/.ssh && echo "{cluster_public_key}" >> id_rsa.pub')
-        ssh.exec_command(
-            'cd ~/.ssh && ssh-keygen -f id_rsa.pub -i -mPKCS8 >> authorized_keys && sudo rm id_rsa.pub')
+        starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
 
-        # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
-        ssh.exec_command(
-            f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST={master_fixed_ip}" > spark-env.sh')
-        # start spark in slave mode
-        starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - 256
-        ssh.exec_command(
-            f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M")
+        commands = [
+            # reset /etc/hosts file
+            f'sudo rm /etc/hosts',
+            f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)\n{master_fixed_ip}\tmaster" | sudo tee -a /etc/hosts',
+            # private key to master, the public key will be copied to the slaves.
+            # master must be able to access slaves with ssh and no password
+            f'cd ~/.ssh && echo "{cluster_public_key}" >> id_rsa.pub',
+            f'cd ~/.ssh && ssh-keygen -f id_rsa.pub -i -mPKCS8 >> authorized_keys && sudo rm id_rsa.pub',
+            # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
+            f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST={master_fixed_ip}" > spark-env.sh',
+            # start spark in slave mode
+            f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M"
+        ]
+    
+        # launching commands
+        ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
+
 
     # main function
     def _create_cluster(self, name, user_ssh_key):
