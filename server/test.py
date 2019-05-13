@@ -1,7 +1,10 @@
 import OpenstackDriver
+import time
 
 d = OpenstackDriver.OpenstackDriver()
 clus = d._create_cluster("test", "")
+
+time.sleep(20)
 
 clus = d._add_slave(clus)
 

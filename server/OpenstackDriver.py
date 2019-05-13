@@ -41,6 +41,8 @@ class Cluster:
         self.network_id = network_id
         self.router_id = router_id
         self.subnet_id = subnet_id
+        self.cluster_private_key = cluster_private_key
+        self.cluster_public_key = cluster_public_key
 
 
 class OpenstackDriver:
@@ -405,6 +407,13 @@ class OpenstackDriver:
         threading.Thread(target=self._setup_slave, args=(slave, master, network, cluster.cluster_public_key)).start()
         # add slave id to cluster instance
         cluster.slaves_ids.append(slave.id)
+        return cluster
+
+
+    # destroy a slave node from the cluster
+    def _remove_slave(self, cluster, slave_id):
+        self._delete_instance(slave_id)
+        cluster.slaves_ids.remove(slave_id)
         return cluster
 
 
