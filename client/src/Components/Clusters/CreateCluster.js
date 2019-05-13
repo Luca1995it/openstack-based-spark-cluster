@@ -13,7 +13,6 @@ export default class CreateCluster extends Component {
         cluster: {
             name: "",
             key: "",
-            flavors: [],
         },
         keys: []
     }
@@ -32,8 +31,7 @@ export default class CreateCluster extends Component {
                 flavors: []
             }
         }, () => {
-            let requests = [axios.get('/api/flavors'), axios.get('/api/sshpairs')];
-            axios.all(requests).then(res => {
+            axios.get('/api/sshpairs').then(res => {
             this.setState({
                 ...this.state,
                 cluster: {

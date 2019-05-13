@@ -199,7 +199,9 @@ def process(id):
 @app.route('/api/flavors', method=['OPTIONS', 'GET'])
 @require_api_token
 def process():
-    return openstackdriver._get_flavors()
+    return {
+        'flavors': openstackdriver._get_flavors()
+    }
 
 
 ############################### CLUSTERS ######################################
@@ -209,15 +211,16 @@ def process():
 def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
-    # get all clusters of this user
-    if id is None:
+    if id:
+        # get single cluster
+        return {
+            'cluster': db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
+        }
+    else:
+        # get all clusters of this user
         return {
             'clusters': list(db.clusters.find({'user_id': user['_id']}))
         }
-    # get single cluster
-    else:
-        cluster = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
-        return cluster
 
 # Create a new cluster with the given parameters
 @app.route('/api/clusters', method=['OPTIONS', 'POST'])
