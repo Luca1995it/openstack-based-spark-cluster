@@ -172,7 +172,7 @@ class OpenstackDriver:
         return private.decode(), public.decode()
 
     # create an instance of an ssh connection that will be used to set up the nodes of the cluster
-    def _get_ssh_connection(self, host, key_file='.ssh/spark_private.key'):
+    def _get_ssh_connection(self, host, key_file='~/.ssh/spark_private.key'):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         tries = 0
@@ -417,6 +417,10 @@ class OpenstackDriver:
         router = self.conn.network.find_router(cluster.router_id)
         # delete the cluster
         self._delete_cluster_dedicated_network(subnet, network, router)
+
+
+    def _add_node(self, cluster, flavor_name):
+
 
         
 '''
