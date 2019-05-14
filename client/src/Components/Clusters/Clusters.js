@@ -117,6 +117,7 @@ class Clusters extends Component {
                                             {clus.slaves_ids.length}
                                         </Table.Cell>
                                         <Table.Cell>
+                                            <Button icon='edit' onClick={() => this.edit(clus)} circular />
                                             <Button icon='delete' onClick={() => this.delete(clus.id)} circular />
                                         </Table.Cell>
                                     </Table.Row>)}
