@@ -354,7 +354,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master,"status","ready")
+        self._set_server_metadata(master,{"status":"ready","floating_ip":master_floating_ip})
         print("Master set up correctly!")
 
 
@@ -395,12 +395,14 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,"status","ready")
+        self._set_server_metadata(slave,"status",value="ready")
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
-    def _set_server_metadata(self,server,key,value):
-        self.conn.compute._set_server_metadata(server,**{key:value})
-
+    def _set_server_metadata(self,server,key,value=None):
+        if value == None:
+            self.conn.compute._set_server_metadata(server,**key)
+        else:
+            self.conn.compute._set_server_metadata(server,**{key:value})
 
     def _get_server_metadata(self,server,key=None):
         update = self.conn.compute.get_server_metadata(server)
@@ -411,14 +413,14 @@ class OpenstackDriver:
 
 
     def _get_server_running_application_number(self,server):
-        ip = self._get_floating_ip_from_instance_and_network(server) #todo
+        ip = self._get_server_metadata(server,key="floating_ip") #todo
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
         return int(re.search("\d",str(line)).group(0))
 
     def _get_server_spark_status(self,server)
-        ip = self._get_floating_ip_from_instance_and_network(server) #todo
+        ip = self._get_server_metadata(server,key="floating_ip") #todo
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
