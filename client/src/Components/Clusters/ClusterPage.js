@@ -125,12 +125,8 @@ class ClusterPage extends Component {
         if (this.state.isLoading) return <Loader active inline='centered' />
         return <div className='homeContainer'>
             <div className="homeSubContainer">
-                <Header size='medium'>Manage cluster {this.props.cluster.name}</Header>
+                <Header size='medium'>Manage cluster "{this.props.cluster.name}"</Header>
                 {this.state.errorMessage ? <Label color="red">{this.state.errorMessage}</Label> : null}
-                <ClusterPageAdd 
-                    cluster={this.props.cluster}
-                    refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/ 
-                    setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
                 <Button circular onClick={this.refresh}>
                     <Icon name='refresh'/>
                     Refresh
@@ -187,6 +183,11 @@ class ClusterPage extends Component {
                     </Table.Body>
                 </Table>
                 <Header size='small'>Slaves</Header>
+                <ClusterPageAdd
+                    cluster={this.props.cluster}
+                    refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/
+                    setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
+                {this.state.slaves.length > 0 ?
                 <Table celled>
                     <Table.Header>
                         <Table.Row>
@@ -242,7 +243,7 @@ class ClusterPage extends Component {
                         </Table.Row>
                         
                     )}
-                </Table>
+                </Table> : <Segment>There are no slaves in this cluster</Segment>
             </div>
         </div>
     }
