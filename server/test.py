@@ -10,4 +10,4 @@ clus = d._add_slave(clus)
 
 print("Flavors: ", d._get_flavors())
 
-print(clus.master_id, clus.network_id, clus.subnet_id, clus.router_id)
+print(clus["master_id"], clus["network_id"], clus["subnet_id"], clus["router_id"])
