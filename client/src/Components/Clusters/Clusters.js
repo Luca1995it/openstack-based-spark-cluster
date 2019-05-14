@@ -3,7 +3,7 @@ import { Header, Loader, Divider, Table, Button, Label } from 'semantic-ui-react
 import CreateCluster from './CreateCluster';
 import './Clusters.css';
 import axios from 'axios';
-
+import ClusterPage from './ClusterPage';
 
 class Clusters extends Component {
 
