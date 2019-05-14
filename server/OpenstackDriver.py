@@ -59,7 +59,7 @@ class OpenstackDriver:
             "/usr/local/spark/sbin/start-slaves.sh"
         ]
         self.restore_spark_service_commands_slave = \
-            lambda mem : f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {mem}M"
+            lambda : f"/usr/local/spark/sbin/start-slave.sh spark://master:7077"
 
     # functions that will be used with the client web-app to simplify communications
 
@@ -441,14 +441,14 @@ class OpenstackDriver:
             f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST={master_fixed_ip}" > spark-env.sh',
             f'cd /usr/local/spark/conf && echo "export SPARK_WORKER_MEMORY={starting_memory}M" >> spark-env.sh',
             # start spark in slave mode
-            f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M"
+            f"/usr/local/spark/sbin/start-slave.sh spark://master:7077"
         ]
     
         # launching commands
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,{"status":"ACTIVE", "spark_role":"master", "starting_memory":starting_memory})
+        self._set_server_metadata(slave,{"status":"ACTIVE", "spark_role":"master"})
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
         slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
@@ -518,12 +518,11 @@ class OpenstackDriver:
             self._set_server_metadata(server, key="status", value="ACTIVE")
 
         elif sr == "slave":
-            mem = sr["starting_memory"]
             
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
             self._set_server_metadata(server, key="status", value="SETTING-UP")
-            ssh.exec_command(self.restore_spark_service_commands_slave(mem))
+            ssh.exec_command(self.restore_spark_service_commands_slave())
 
             self._remove_floating_ip_from_instance(server, server_floating_ip)
             self._set_server_metadata(server, key="status", value="ACTIVE")            
