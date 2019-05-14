@@ -424,7 +424,7 @@ class OpenstackDriver:
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)
-        self._set_server_metadata(master, "status", key="SETTING-UP")
+        self._set_server_metadata(slave, "status", value="SETTING-UP")
         print("Connected to slave!")
 
         starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
@@ -448,7 +448,7 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,{"status":"ACTIVE", "spark_role":"master"})
+        self._set_server_metadata(slave,{"status":"ACTIVE", "spark_role":"slave"})
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
         slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
