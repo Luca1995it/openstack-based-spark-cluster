@@ -268,7 +268,6 @@ class OpenstackDriver:
                 if ip['OS-EXT-IPS:type'] == 'floating':
                     res.append(ip['addr'])
 
-        print(res)
         return res
 
     # network should be the network dedicated to the cluster, not the public one
@@ -478,17 +477,15 @@ class OpenstackDriver:
 
 
     def _get_server_running_application_number(self, server):
-        return 0
         ip = self._get_floating_ips_from_instance(server)[0]
-        resp = requests.get(f"http://{ip}:8080/api/v1/application").content
+        resp = requests.get(f"http://{ip}:8080/api/v1/applications").content
         soup = bs(resp)
         line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
         return int(re.search("\d",str(line)).group(0))
 
     def _get_server_spark_status(self, server):
-        return "ON"
         ip = self._get_floating_ips_from_instance(server)[0]
-        resp = requests.get(f"http://{ip}:8080/api/v1/application").content
+        resp = requests.get(f"http://{ip}:8080/api/v1/applications").content
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
 
