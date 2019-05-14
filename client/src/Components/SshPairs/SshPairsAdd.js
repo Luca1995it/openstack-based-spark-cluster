@@ -37,7 +37,7 @@ export default class SshPairsAdd extends Component {
         this.setState({
             ...this.state,
             isLoading: true,
-        }, () => axios.post('/api/sshpairs', {
+        }, () => axios.post('/api/sshpair', {
             key: this.state.key,
             name: this.state.name
         }).then(res => {

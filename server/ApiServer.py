@@ -151,7 +151,7 @@ def require_api_token(func):
 
 ########################## SSH PAIRS ##########################################
 # Get list of ssh keys of the current user
-@app.route('/api/sshpairs', method=['OPTIONS', 'GET'])
+@app.route('/api/sshpair', method=['OPTIONS', 'GET'])
 @require_api_token
 def process():
     token = request.get_header('X-CSRF-Token')
@@ -159,11 +159,11 @@ def process():
     sshp = db.sshpairs.find({'user_id': user['_id']})
     results = [{'name': s['name'], 'id': str(s['_id'])} for s in sshp]
     return {
-        'sshpairs': results
+        'sshpair': results
     }
 
 # Insert a new key for the current user
-@app.route('/api/sshpairs', method=['OPTIONS', 'POST'])
+@app.route('/api/sshpair', method=['OPTIONS', 'POST'])
 @require_api_token
 def process():
     try:
@@ -184,29 +184,35 @@ def process():
     return "ok"
 
 # Delete a key for the current user
-@app.route('/api/sshpairs/<id>', method=['OPTIONS', 'DELETE'])
+@app.route('/api/sshpair/<id>', method=['OPTIONS', 'DELETE'])
 @require_api_token
 def process(id):
-    token = request.get_header('X-CSRF-Token')
-    user = db.users.find_one({'token': token})
-    db.sshpairs.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
-    return "ok"
+    if id:
+        token = request.get_header('X-CSRF-Token')
+        user = db.users.find_one({'token': token})
+        db.sshpairs.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
+        return "ok"
+    else:
+        return {
+            'status': "MISSING_PARAMS",
+            'message': 'id not specified'
+        }
 
 
 
 ############################### FLAVORS #######################################
 # Get list of flavor
-@app.route('/api/flavors', method=['OPTIONS', 'GET'])
+@app.route('/api/flavor', method=['OPTIONS', 'GET'])
 @require_api_token
 def process():
     return {
-        'flavors': openstackdriver._get_flavors()
+        'flavor': openstackdriver._get_flavors()
     }
 
 
 ############################### CLUSTERS ######################################
 # Get single / list of clusters of the user with actual token
-@app.route('/api/clusters/<id>', method=['OPTIONS', 'GET'])
+@app.route('/api/cluster/<id>', method=['OPTIONS', 'GET'])
 @require_api_token
 def process(id):
     token = request.get_header('X-CSRF-Token')
@@ -219,12 +225,12 @@ def process(id):
     else:
         # get all clusters of this user
         return {
-            'clusters': list(db.clusters.find({'user_id': user['_id']}))
+            'cluster': list(db.clusters.find({'user_id': user['_id']}))
         }
 
 # TODO: Cluster names collision!!!
 # Create a new cluster with the given parameters
-@app.route('/api/clusters', method=['OPTIONS', 'POST'])
+@app.route('/api/cluster', method=['OPTIONS', 'POST'])
 @require_api_token
 def process():
     try:
@@ -237,21 +243,22 @@ def process():
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
 
-    if 'name' not in parameters or 'key' not in parameters:
+    if 'name' not in parameters or 'key_id' not in parameters:
         return {
             'status': "MISSING_PARAMS",
             'message': 'name or key missing'
         }
     # get ssh key selected by the user
-    key = db.sshpairs.find_one({'_id': ObjectId(parameters['key'])})
+    key = db.sshpairs.find_one({'user_id': user['_id'], '_id': ObjectId(parameters['key_id'])})
     cluster = openstackdriver._create_cluster(parameters['name'], key['key'])
     # add cluster to database
+    cluster['key_id'] = str(key['_id'])
     db.clusters.insert_one({'user_id': user['_id'], 'cluster': cluster})
 
     return "OK"
 
 # Delete a cluster given the id
-@app.route('/api/clusters/<id>', method=['OPTIONS', 'DELETE'])
+@app.route('/api/cluster/<id>', method=['OPTIONS', 'DELETE'])
 @require_api_token
 def process(id):
     token = request.get_header('X-CSRF-Token')
@@ -274,15 +281,19 @@ def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
     # get all clusters of this user
-    if id:
+    if not id:
         return {
-            'instance': openstackdriver._get_instance_info(id)
+            'status': "MISSING_PARAMS",
+            'message': 'id missing'
         }
-    return None
+    return {
+        'instance': openstackdriver._get_instance_info(id)
+    }
+    
 
-@app.route('/api/instance', method=['OPTIONS', 'POST'])
+@app.route('/api/instance/<cluster_id>', method=['OPTIONS', 'POST'])
 @require_api_token
-def process(id):
+def process(cluster_id):
     try:
         parameters = json.load(request.body)
     except json.decoder.JSONDecodeError as error:
@@ -293,11 +304,20 @@ def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
 
-    if 'flavor_name' not in parameters or 'quantity' not in parameters:
+    if 'flavor_name' not in parameters or 'quantity' not in parameters or cluster_id is None:
         return {
             'status': "MISSING_PARAMS",
-            'message': 'name or key missing'
+            'message': 'flavor_name or quantity or cluster_id missing'
         }
+    
+    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(parameters['cluster_id'])})
+    cluster = result['cluster']
+    for i in range(parameters['quantity']):
+        cluster = openstackdriver._add_slave(cluster, flavor_name=parameters['flavor_name'])
+    db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(parameters['cluster_id'])},
+                           {'$set': {'cluster': cluster}})
+    return "OK"
+
 
 @app.route('/api/instance/<action>/<id>', method=['OPTIONS', 'PUT'])
 @require_api_token
@@ -312,13 +332,47 @@ def process(action, id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
 
-    if 'action' is None or 'id' is None:
+    if 'action' not in ['start', 'restart', 'shutdown'] or 'id' is None:
         return {
             'status': "MISSING_PARAMS",
-            'message': 'action or id missing'
+            'message': 'action should be one of "start", "restart" or "shutdown" or id missing'
         }
-    
+    if action == 'start':
+        openstackdriver._start_server(id)
+    elif action == 'restart':
+        openstackdriver._reboot_server(id)
+    else:
+        openstackdriver._stop_server(id)
+    return "OK"
 
+
+@app.route('/api/instance/<cluster_id>/<id>', method=['OPTIONS', 'DELETE'])
+@require_api_token
+def process(cluster_id, id):
+    try:
+        parameters = json.load(request.body)
+    except json.decoder.JSONDecodeError as error:
+        return {
+            'status': "MALFORMED_JSON",
+            'message': "Malformed JSON body in request"
+        }
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
+
+    if id is None or cluster_id is None:
+        return {
+            'status': "MISSING_PARAMS",
+            'message': 'id missing'
+        }
+        
+    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)})
+    cluster = result['cluster']
+    openstackdriver._delete_server(id)
+    cluster.slaves_ids.remove(id)
+
+    db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)},
+                           {'$set': {'cluster': cluster}})
+    return "OK"
 
 
 ############################ START THE API SERVER #############################

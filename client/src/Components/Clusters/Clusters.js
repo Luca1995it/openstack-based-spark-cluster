@@ -31,10 +31,10 @@ class Clusters extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.get('/api/clusters').then(res => {
+            axios.get('/api/cluster').then(res => {
                 this.setState({
                     ...this.state,
-                    clusters: res.data.clusters,
+                    clusters: res.data.cluster,
                     isLoading: false,
                     errorMessage: ""
                 });
@@ -55,7 +55,7 @@ class Clusters extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.delete(`/api/clusters/${id}`).then(this.refresh).catch(err => {
+            axios.delete(`/api/cluster/${id}`).then(this.refresh).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,

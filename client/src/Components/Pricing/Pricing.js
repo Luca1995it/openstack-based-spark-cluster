@@ -20,10 +20,10 @@ class Pricing extends Component {
             ...this.state,
             flavors: []
         }, () => {
-            axios.get('/api/flavors').then(res => {
+            axios.get('/api/flavor').then(res => {
                 this.setState({
                     ...this.state,
-                    flavors: res.data.flavors
+                    flavors: res.data.flavor
                 });
             }).catch(err => {
                 console.log(err);
@@ -51,16 +51,18 @@ class Pricing extends Component {
                                 <Table.HeaderCell>vCPUs</Table.HeaderCell>
                                 <Table.HeaderCell>RAM</Table.HeaderCell>
                                 <Table.HeaderCell>Disk</Table.HeaderCell>
+                                <Table.HeaderCell>Swap</Table.HeaderCell>
                             </Table.Row>
                         </Table.Header>
 
                         <Table.Body>
-                            {this.state.flavors.map(f =>
-                                <Table.Row key={f.id}>
-                                    <Table.Cell>{f.name}</Table.Cell>
-                                    <Table.Cell>{f.vcpus}</Table.Cell>
-                                    <Table.Cell>{`${f.ram} MB`}</Table.Cell>
-                                    <Table.Cell>{`${f.disk} GB`}</Table.Cell>
+                            {this.state.flavors.map(flavor =>
+                                <Table.Row key={flavor.id}>
+                                    <Table.Cell>{flavor.name}</Table.Cell>
+                                    <Table.Cell>{flavor.vcpus}</Table.Cell>
+                                    <Table.Cell>{`${flavor.ram} MB`}</Table.Cell>
+                                    <Table.Cell>{`${flavor.disk} GB`}</Table.Cell>
+                                    <Table.Cell>{`${flavor.swap} GB`}</Table.Cell>
                                 </Table.Row>)}
                         </Table.Body>
                     </Table>

@@ -27,10 +27,10 @@ class Pricing extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.get('/api/sshpairs').then(res => {
+            axios.get('/api/sshpair').then(res => {
                 this.setState({
                     ...this.state,
-                    sshpairs: res.data.sshpairs,
+                    sshpairs: res.data.sshpair,
                     isLoading: false
                 });
             }).catch(err => {
@@ -49,7 +49,7 @@ class Pricing extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.delete(`/api/sshpairs/${id}`).then(this.refresh).catch(err => console.log(err));
+            axios.delete(`/api/sshpair/${id}`).then(this.refresh).catch(err => console.log(err));
         });
     }
 

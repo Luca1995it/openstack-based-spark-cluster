@@ -337,7 +337,7 @@ class OpenstackDriver:
         ssh = self._get_ssh_connection(master_floating_ip)
         print("Connected to master!")
 
-        self._set_server_metadata(master,"status":key="settingup")
+        self._set_server_metadata(master, "status", key="settingup")
 
         commands = [
             # private key to master, the public key will be copied to the slaves.
@@ -375,7 +375,7 @@ class OpenstackDriver:
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)
-        self._set_server_metadata(master,"status":key="settingup")
+        self._set_server_metadata(master, "status", key="settingup")
         print("Connected to slave!")
 
         starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
@@ -450,16 +450,16 @@ class OpenstackDriver:
             self._set_server_metadata(server,key="status",value="active")
 
 
-    def _stop_server(self,server):
-        self._set_server_metadata(server,"status",value="stopped")
-        self.conn.compute.stop_server(server)
+    def _stop_server(self,server_id):
+        self._set_server_metadata(server_id, "status", value="stopped")
+        self.conn.compute.stop_server(server_id)
 
-    def _delete_server(self,server):
-        self.conn.compute.delete_server(server)
+    def _delete_server(self, server_id):
+        self.conn.compute.delete_server(server_id)
 
-    def _start_server(self,server):
-        self.conn.compute.start_server(server)
-        self._set_server_metadata(server,"status",value="active")
+    def _start_server(self, server_id):
+        self.conn.compute.start_server(server_id)
+        self._set_server_metadata(server_id, "status", value="active")
 
 
     # main function

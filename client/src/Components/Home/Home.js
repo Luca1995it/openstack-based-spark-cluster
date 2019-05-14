@@ -25,17 +25,14 @@ export default class Home extends Component {
                 flavors: []
             }
         }, () => {
-            let requests = [axios.get('/api/clusters'), axios.get('/api/flavors'), axios.get('/api/sshpairs')];
-            axios.all(requests).then(res => {
-                console.log(res);
-                
+            let requests = [axios.get('/api/cluster'), axios.get('/api/flavor'), axios.get('/api/sshpair')];
+            axios.all(requests).then(res => 
                 this.setState({
                     ...this.state,
-                    clusters_num: res[0].data.clusters.length,
-                    flavors_num: res[1].data.flavors.length,
-                    keys_num: res[2].data.sshpairs.length
-                });
-            }).catch(err => {
+                    clusters_num: res[0].data.cluster.length,
+                    flavors_num: res[1].data.flavor.length,
+                    keys_num: res[2].data.sshpair.length
+                })).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,

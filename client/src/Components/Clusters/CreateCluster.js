@@ -27,10 +27,10 @@ export default class CreateCluster extends Component {
             ...this.state,
             modalOpen: true,
         }, () => {
-            axios.get('/api/sshpairs').then(res => {
+            axios.get('/api/sshpair').then(res => {
             this.setState({
                 ...this.state,
-                keys: res.data.sshpairs
+                keys: res.data.sshpair
             });
         }).catch(err => {
             console.log(err);
@@ -52,7 +52,10 @@ export default class CreateCluster extends Component {
         this.setState({
             ...this.state,
             isLoading: true,
-        }, () => axios.post('/api/clusters', this.state.cluster).then(res => {
+        }, () => axios.post('/api/cluster', {
+            key_id: this.state.cluster.key,
+            name: this.state.cluster.name
+        }).then(res => {
                 this.setState({
                     ...this.state,
                     isLoading: false,

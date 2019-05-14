@@ -115,7 +115,10 @@ class ClusterPage extends Component {
             <div className="homeSubContainer">
                 <Header size='medium'>Manage cluster {this.props.cluster.name}</Header>
                 {this.state.errorMessage ? <Label color="red">{this.state.errorMessage}</Label> : null}
-                <ClusterPageAdd refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/ setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
+                <ClusterPageAdd 
+                    cluster={this.props.cluster}
+                    refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/ 
+                    setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
                 <Divider />
                 <Header size='small'>Master</Header>
                 <Table celled>

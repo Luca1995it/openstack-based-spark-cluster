@@ -32,10 +32,10 @@ export default class ClusterPageAdd extends Component {
                 quantity: 1
             }
         }, () => {
-            axios.get('/api/flavors').then(res => {
+            axios.get('/api/flavor').then(res => {
                 this.setState({
                     ...this.state,
-                    flavors: res.data.flavors
+                    flavors: res.data.flavor
                 });
             }).catch(err => {
                 console.log(err);
@@ -58,7 +58,7 @@ export default class ClusterPageAdd extends Component {
         this.setState({
             ...this.state,
             isLoading: true,
-        }, () => axios.post('/api/instance', this.state.instance).then(res => {
+        }, () => axios.post(`/api/instance/${this.props.cluster.id}`, this.state.instance).then(res => {
             this.setState({
                 ...this.state,
                 isLoading: false,
