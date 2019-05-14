@@ -251,8 +251,9 @@ class OpenstackDriver:
         if 'addresses' not in instance:
             instance = self.conn.compute.find_server(instance.id)
         for addr in instance.addresses.values():
-            if addr['OS-EXT-IPS:type'] == 'fixed':
-                res.append(addr['addr'])
+            for ip in addr:
+                if ip['OS-EXT-IPS:type'] == 'fixed':
+                    res.append(ip['addr'])
         return res
 
     # get list of floating ips of this instance
@@ -262,8 +263,9 @@ class OpenstackDriver:
         if 'addresses' not in instance:
             instance = self.conn.compute.find_server(instance.id)
         for addr in instance.addresses.values():
-            if addr['OS-EXT-IPS:type'] == 'fixed':
-                res.append(addr['addr'])
+            for ip in addr:
+                if ip['OS-EXT-IPS:type'] == 'floating':
+                    res.append(ip['addr'])
         return res
 
     # network should be the network dedicated to the cluster, not the public one
