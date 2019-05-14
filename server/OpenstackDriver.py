@@ -393,6 +393,7 @@ class OpenstackDriver:
             f'cd ~/.ssh && ssh-keygen -f id_rsa.pub -i -mPKCS8 >> authorized_keys && sudo rm id_rsa.pub',
             # set SPARK_MASTER_HOST variable in the /usr/local/spark/conf/spark-env.sh config file
             f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST={master_fixed_ip}" > spark-env.sh',
+            f'cd /usr/local/spark/conf && echo "export SPARK_WORKER_MEMORY={starting_memory}M" >> spark-env.sh',
             # start spark in slave mode
             f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {starting_memory}M"
         ]
