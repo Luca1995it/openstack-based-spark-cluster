@@ -90,7 +90,7 @@ class Clusters extends Component {
                     {this.state.errorMessage ? <Label color="red">{this.state.errorMessage}</Label> : null}
                     <CreateCluster refresh={this.refresh} disabled={this.state.clusters.length >= 2} setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg})}/>
                     <Divider />
-                    <Button circular icon='refresh' labelPosition='right' onClick={this.refresh} />
+                    <Button circular icon='refresh' labelPosition='right' onClick={this.refresh} >Refresh</Button>
                     <Divider />
                     <div className='homeAdvices'>
                         {`There are ${this.state.clusters.length}/2 clusters running!`}
