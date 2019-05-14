@@ -10,6 +10,7 @@ export default class CreateCluster extends Component {
     state = {
         modalOpen: false,
         isLoading: false,
+        isLoadingCluster: false,
         cluster: {
             name: "",
             key: "",
@@ -51,7 +52,7 @@ export default class CreateCluster extends Component {
     addCluster() {
         this.setState({
             ...this.state,
-            isLoading: true,
+            isLoadingCluster: true,
         }, () => axios.post('/api/cluster', {
             key_id: this.state.cluster.key,
             name: this.state.cluster.name
@@ -59,7 +60,8 @@ export default class CreateCluster extends Component {
                 this.setState({
                     ...this.state,
                     isLoading: false,
-                    modalOpen: false
+                    modalOpen: false,
+                    isLoadingCluster: false
                 }, () => setTimeout(() => this.props.refresh(), 500));
             }).catch(err => {
                 console.log(err);
@@ -67,7 +69,8 @@ export default class CreateCluster extends Component {
                 this.setState({
                     ...this.state,
                     isLoading: false,
-                    modalOpen: false
+                    modalOpen: false,
+                    isLoadingCluster: false
                 });
             })
         );
@@ -120,7 +123,7 @@ export default class CreateCluster extends Component {
                     <Button
                         animated='fade'
                         color='green'
-                        loading={this.state.isLoading}
+                        loading={this.state.isLoadingCluster}
                         onClick={this.addCluster}
                         disabled={this.state.cluster.name === "" || !this.state.cluster.key}>
                         <Button.Content visible>

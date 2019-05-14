@@ -18,6 +18,8 @@ class Clusters extends Component {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.delete = this.delete.bind(this);
+        this.back = this.back.bind(this);
+        this.edit = this.edit.bind(this);
     }
 
     componentDidMount(){
