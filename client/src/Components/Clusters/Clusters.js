@@ -104,7 +104,7 @@ class Clusters extends Component {
                     {this.state.clusters.length > 0 ?
                         <Table celled structured>
                             <Table.Header>
-                                <Table.Row>
+                                <Table.Row key={"0"}>
                                     <Table.HeaderCell rowSpan='6'>Name</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='4'>Number of nodes</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='6'>Actions</Table.HeaderCell>

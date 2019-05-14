@@ -152,37 +152,39 @@ class ClusterPage extends Component {
                             <Table.HeaderCell>Actions</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
-                    {this.state.master ? <Table.Row>
-                        <Table.Cell>{this.state.master.name}</Table.Cell>
-                        <Table.Cell>{this.state.master.flavor.vcpus}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.flavor.ram} MB`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.flavor.disk} GB`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.flavor.swap} MB`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.status}`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.spark_status}`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.number_running_app}`}</Table.Cell>
-                        <Table.Cell>{`[${this.state.master.public_ips.join(", ")}]`}</Table.Cell>
-                        <Table.Cell>
-                            <Button circular color='green'
-                                onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status !== 'STOPPED'}
-                            >
-                                Start
-                            </Button>
-                            <Button circular color='yellow'
-                                onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status !== 'ACTIVE'}
-                            >
-                                Restart
-                            </Button>
-                            <Button circular color='red'
-                                onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status !== 'ACTIVE'}
-                            >
-                                Shutdown
-                            </Button>
-                        </Table.Cell>
-                    </Table.Row> : null}
+                    <Table.Body>
+                        {this.state.master ? <Table.Row>
+                            <Table.Cell>{this.state.master.name}</Table.Cell>
+                            <Table.Cell>{this.state.master.flavor.vcpus}</Table.Cell>
+                            <Table.Cell>{`${this.state.master.flavor.ram} MB`}</Table.Cell>
+                            <Table.Cell>{`${this.state.master.flavor.disk} GB`}</Table.Cell>
+                            <Table.Cell>{`${this.state.master.flavor.swap} MB`}</Table.Cell>
+                            <Table.Cell>{`${this.state.master.status}`}</Table.Cell>
+                            <Table.Cell>{`${this.state.master.spark_status}`}</Table.Cell>
+                            <Table.Cell>{`${this.state.master.number_running_app}`}</Table.Cell>
+                            <Table.Cell>{`[${this.state.master.public_ips.join(", ")}]`}</Table.Cell>
+                            <Table.Cell>
+                                <Button circular color='green'
+                                    onClick={() => this.restart(this.state.master.id)}
+                                    disabled={this.state.master.status !== 'STOPPED'}
+                                >
+                                    Start
+                                </Button>
+                                <Button circular color='yellow'
+                                    onClick={() => this.restart(this.state.master.id)}
+                                    disabled={this.state.master.status !== 'ACTIVE'}
+                                >
+                                    Restart
+                                </Button>
+                                <Button circular color='red'
+                                    onClick={() => this.restart(this.state.master.id)}
+                                    disabled={this.state.master.status !== 'ACTIVE'}
+                                >
+                                    Shutdown
+                                </Button>
+                            </Table.Cell>
+                        </Table.Row> : null}
+                    </Table.Body>
                 </Table>
                 <Header size='small'>Slaves</Header>
                 <Table celled>
