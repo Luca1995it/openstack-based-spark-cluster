@@ -472,6 +472,7 @@ class OpenstackDriver:
 
 
     def _get_server_running_application_number(self, server):
+        return 0
         ip = self._get_floating_ips_from_instance(server)[0]
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
@@ -479,9 +480,8 @@ class OpenstackDriver:
         return int(re.search("\d",str(line)).group(0))
 
     def _get_server_spark_status(self, server):
+        return "ON"
         ip = self._get_floating_ips_from_instance(server)[0]
-        print("#######################", ip)
-        exit()
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
