@@ -7,16 +7,218 @@ import axios from 'axios';
 class ClusterPage extends Component {
 
     state = {
+        isLoading: false,
         errorMessage: "",
+        master: undefined,
+        slaves: []
+    }
+
+    componentDidMount(){
+        this.refresh()
+    }
+
+    refresh(){
+        let n_slaves = this.props.cluster.slaves_ids.length;
+        let requests = [axios.get(`/api/instance/${this.props.cluster.master_id}`)] + 
+            this.props.cluster.slaves_ids.map(id => axios.get(`/api/instance/${id}`));
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        }, () => {
+            axios.all(requests).then(res => {
+                this.setState({
+                    ...this.state,
+                    master: res[0].data.instance,
+                    slaves: res.slice(1).map(r => r.data.instance),
+                    isLoading: false,
+                    errorMessage: ""
+                });
+            }).catch(err => {
+                console.log(err);
+                this.setState({
+                    ...this.state,
+                    clusters: [],
+                    isLoading: false,
+                    errorMessage: "There was a problem loading the nodes, try refreshing the page"
+                });
+            })
+        });
+    }
+
+    start(id){
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        }, () => {
+            axios.put(`/api/instance/start/${id}`).then(this.refresh).catch(err => {
+                console.log(err);
+                this.setState({
+                    ...this.state,
+                    isLoading: false,
+                    errorMessage: "There was a problem starting the instance, try refreshing the page"
+                });
+            });
+        });
+    }
+
+    restart(id){
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        }, () => {
+            axios.put(`/api/instance/restart/${id}`).then(this.refresh).catch(err => {
+                console.log(err);
+                this.setState({
+                    ...this.state,
+                    isLoading: false,
+                    errorMessage: "There was a problem restarting the instance, try refreshing the page"
+                });
+            });
+        });
+    }
+
+    shutdown(id){
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        }, () => {
+            axios.put(`/api/instance/shutdown/${id}`).then(this.refresh).catch(err => {
+                console.log(err);
+                this.setState({
+                    ...this.state,
+                    isLoading: false,
+                    errorMessage: "There was a problem shutting down the instance, try refreshing the page"
+                });
+            });
+        });
+    }
+
+    delete(id){
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        }, () => {
+            axios.delete(`/api/instance/${id}`).then(this.refresh).catch(err => {
+                console.log(err);
+                this.setState({
+                    ...this.state,
+                    isLoading: false,
+                    errorMessage: "There was a problem restarting the instance, try refreshing the page"
+                });
+            });
+        });
     }
 
     render(){
+        if (this.state.isLoading) return <Loader active inline='centered' />
         return <div className='homeContainer'>
             <div className="homeSubContainer">
                 <Header size='medium'>Manage cluster {this.props.cluster.name}</Header>
                 {this.state.errorMessage ? <Label color="red">{this.state.errorMessage}</Label> : null}
                 <ClusterPageAdd refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/ setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
                 <Divider />
+                <Header size='small'>Master</Header>
+                <Table celled>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Name</Table.HeaderCell>
+                            <Table.HeaderCell>vCPUs</Table.HeaderCell>
+                            <Table.HeaderCell>RAM</Table.HeaderCell>
+                            <Table.HeaderCell>Disk</Table.HeaderCell>
+                            <Table.HeaderCell>Swap</Table.HeaderCell>
+                            <Table.HeaderCell>Status</Table.HeaderCell>
+                            <Table.HeaderCell>IP(s)</Table.HeaderCell>
+                            <Table.HeaderCell>Actions</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    {this.state.master ? <Table.Row>
+                        <Table.Cell>{this.state.master.name}</Table.Cell>
+                        <Table.Cell>{this.state.master.vcpus}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.ram} MB`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.disk} GB`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.swap} GB`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.status}`}</Table.Cell>
+                        <Table.Cell>{`[${this.state.master.public_ips.join(", ")}]`}</Table.Cell>
+                        <Table.Cell>
+                            <Button circular color='green'
+                                onClick={() => this.restart(this.state.master.id)}
+                                disabled={this.state.master.status != 'stopped'}
+                            >
+                                Start
+                            </Button>
+                            <Button circular color='yellow'
+                                onClick={() => this.restart(this.state.master.id)}
+                                disabled={this.state.master.status != 'active'}
+                            >
+                                Restart
+                            </Button>
+                            <Button circular color='red'
+                                onClick={() => this.restart(this.state.master.id)}
+                                disabled={this.state.master.status != 'active'}
+                            >
+                                Shutdown
+                            </Button>
+                            <Button circular color='white' inverted
+                                onClick={() => this.delete(this.state.master.id)}
+                            >
+                                Delete
+                            </Button>
+                        </Table.Cell>
+                    </Table.Row> : null}
+                </Table>
+                <Header size='small'>Slaves</Header>
+                <Table celled>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Name</Table.HeaderCell>
+                            <Table.HeaderCell>vCPUs</Table.HeaderCell>
+                            <Table.HeaderCell>RAM</Table.HeaderCell>
+                            <Table.HeaderCell>Disk</Table.HeaderCell>
+                            <Table.HeaderCell>Swap</Table.HeaderCell>
+                            <Table.HeaderCell>Status</Table.HeaderCell>
+                            <Table.HeaderCell>IP(s)</Table.HeaderCell>
+                            <Table.HeaderCell>Actions</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+
+                    {this.state.slaves.map(slave => 
+                        <Table.Row>
+                            <Table.Cell>{slave.name}</Table.Cell>
+                            <Table.Cell>{slave.vcpus}</Table.Cell>
+                            <Table.Cell>{`${slave.ram} MB`}</Table.Cell>
+                            <Table.Cell>{`${slave.disk} GB`}</Table.Cell>
+                            <Table.Cell>{`${slave.swap} GB`}</Table.Cell>
+                            <Table.Cell>{`${slave.status}`}</Table.Cell>
+                            <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
+                            <Table.Cell>
+                                <Button circular color='green'
+                                    onClick={() => this.restart(slave.id)}
+                                    disabled={slave.status != 'stopped'}
+                                >
+                                    Start
+                                </Button>
+                                <Button circular color='yellow'
+                                    onClick={() => this.restart(slave.id)}
+                                    disabled={slave.status != 'active'}
+                                >
+                                    Restart
+                                </Button>
+                                <Button circular color='red'
+                                    onClick={() => this.restart(slave.id)}
+                                    disabled={slave.status != 'active'}
+                                >
+                                    Shutdown
+                                </Button>
+                                <Button circular color='white' inverted
+                                    onClick={() => this.delete(slave.id)}
+                                >
+                                    Delete
+                            </Button>
+                            </Table.Cell>
+                        </Table.Row>
+                        
+                    )}
+                </Table>
             </div>
         </div>
     }
@@ -24,86 +226,3 @@ class ClusterPage extends Component {
 }
 
 export default ClusterPage;
-
-{
-    this.state.clusters.length > 0 ?
-    <Table celled structured>
-        <Table.Header>
-            <Table.Row>
-                <Table.HeaderCell rowSpan='2'>Name</Table.HeaderCell>
-                <Table.HeaderCell colSpan={this.state.flavors.length}>Flavors</Table.HeaderCell>
-                <Table.HeaderCell rowSpan='2'>Actions</Table.HeaderCell>
-            </Table.Row>
-            <Table.Row>
-                {this.state.flavors.map(flav => <Table.HeaderCell>{flav.name}</Table.HeaderCell>)}
-            </Table.Row>
-        </Table.Header>
-
-        <Table.Body>
-            {this.state.clusters.map(clus =>
-                <Table.Row>
-                    <Table.Cell>{clus.name}</Table.Cell>
-                    {this.state.flavors.map(
-                        flav => <Table.Cell>
-                            {clus.flavors.find(fl => fl.id === flav.id) ? clus.flavors.find(fl => fl.id === flav.id).quantity : 0}
-                        </Table.Cell>)
-                    }
-                    <Table.Cell>
-                        <Button icon='delete' onClick={() => this.delete(clus.id)} circular />
-                    </Table.Cell>
-                </Table.Row>)}
-        </Table.Body>
-    </Table> : <Label>No clusters available, click add to create a new one</Label>
-}
-
-
-
-
-<Header content='Slave nodes' size='small' />
-    <Form>
-        <Table celled>
-            <Table.Header>
-                <Table.Row>
-                    <Table.HeaderCell>Name</Table.HeaderCell>
-                    <Table.HeaderCell>vCPUs</Table.HeaderCell>
-                    <Table.HeaderCell>RAM</Table.HeaderCell>
-                    <Table.HeaderCell>Disk</Table.HeaderCell>
-                    <Table.HeaderCell>Swap</Table.HeaderCell>
-                    <Table.HeaderCell>Quantity</Table.HeaderCell>
-                </Table.Row>
-            </Table.Header>
-
-            <Table.Body>
-                {this.state.cluster.flavors.filter(obj => !obj.name.startsWith('master')).map(f =>
-                    <Table.Row key={f.id}>
-                        <Table.Cell>{f.name}</Table.Cell>
-                        <Table.Cell>{f.vcpus}</Table.Cell>
-                        <Table.Cell>{`${f.ram} MB`}</Table.Cell>
-                        <Table.Cell>{`${f.disk} GB`}</Table.Cell>
-                        <Table.Cell>{`${f.swap} GB`}</Table.Cell>
-                        <Table.Cell><Form.Input
-                            type='number'
-                            min="0" max="3"
-                            value={f.quantity}
-                            onChange={
-                                (e) => {
-                                    this.setState({
-                                        ...this.state,
-                                        cluster: {
-                                            ...this.state.cluster,
-                                            flavors: this.state.cluster.flavors.map(obj => {
-                                                if (obj.id !== f.id) return obj;
-                                                let res = parseInt(e.target.value);
-                                                if (res > 3) res = 3;
-                                                if (res < 0) res = 0;
-                                                return { ...obj, quantity: res };
-                                            })
-                                        }
-                                    });
-                                }
-                            } >
-                        </Form.Input></Table.Cell>
-                    </Table.Row>)}
-            </Table.Body>
-        </Table>
-    </Form>
