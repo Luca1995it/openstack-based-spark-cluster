@@ -18,14 +18,12 @@ class ClusterPage extends Component {
     }
 
     refresh(){
-        let requests = [axios.get(`/api/instance/${this.props.cluster.master_id}`)] + 
-            this.props.cluster.slaves_ids.map(id => axios.get(`/api/instance/${id}`));
-        console.log(requests);
-        
         this.setState({
             ...this.state,
             isLoading: true,
         }, () => {
+            let requests = [axios.get(`/api/instance/${this.props.cluster.master_id}`)] +
+                this.props.cluster.slaves_ids.map(id => axios.get(`/api/instance/${id}`));
             axios.all(requests).then(res => {
                 console.log(res);
                 

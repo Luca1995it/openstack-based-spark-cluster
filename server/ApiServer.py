@@ -286,7 +286,6 @@ def process(id):
 @require_api_token
 def process(id):
     res =  openstackdriver._get_instance_info(id)
-    print(res)
     return {
         'instance': res
     }
