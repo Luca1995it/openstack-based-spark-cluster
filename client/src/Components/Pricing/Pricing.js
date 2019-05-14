@@ -41,7 +41,7 @@ class Pricing extends Component {
         return (
             <div className='homeContainer'>
                 <div className="homeSubContainer">
-                    <Header size='medium'>Available Slave Nodes</Header>
+                    <Header size='medium'>Available Configurations for slave nodes</Header>
                     <Divider />
 
                     <Table celled>
