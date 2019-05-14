@@ -285,14 +285,6 @@ def process(id):
 @app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
 @require_api_token
 def process(id):
-    token = request.get_header('X-CSRF-Token')
-    user = db.users.find_one({'token': token})
-    # get all clusters of this user
-    if not id:
-        return {
-            'status': "MISSING_PARAMS",
-            'message': 'id missing'
-        }
     return {
         'instance': openstackdriver._get_instance_info(id)
     }
