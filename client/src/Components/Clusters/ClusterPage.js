@@ -148,19 +148,19 @@ class ClusterPage extends Component {
                         <Table.Cell>
                             <Button circular color='green'
                                 onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status != 'STOPPED'}
+                                disabled={this.state.master.status !== 'STOPPED'}
                             >
                                 Start
                             </Button>
                             <Button circular color='yellow'
                                 onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status != 'ACTIVE'}
+                                disabled={this.state.master.status !== 'ACTIVE'}
                             >
                                 Restart
                             </Button>
                             <Button circular color='red'
                                 onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status != 'ACTIVE'}
+                                disabled={this.state.master.status !== 'ACTIVE'}
                             >
                                 Shutdown
                             </Button>
@@ -198,19 +198,19 @@ class ClusterPage extends Component {
                             <Table.Cell>
                                 <Button circular color='green'
                                     onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status != 'STOPPED'}
+                                    disabled={slave.status !== 'STOPPED'}
                                 >
                                     Start
                                 </Button>
                                 <Button circular color='yellow'
                                     onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status != 'ACTIVE'}
+                                    disabled={slave.status !== 'ACTIVE'}
                                 >
                                     Restart
                                 </Button>
                                 <Button circular color='red'
                                     onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status != 'ACTIVE'}
+                                    disabled={slave.status !== 'ACTIVE'}
                                 >
                                     Shutdown
                                 </Button>

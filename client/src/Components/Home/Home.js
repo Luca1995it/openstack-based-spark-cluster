@@ -12,10 +12,6 @@ export default class Home extends Component {
         keys_num: []
     }
 
-    constructor(props) {
-        super(props);
-    }
-
     componentDidMount(){
         this.setState({
             ...this.state,
