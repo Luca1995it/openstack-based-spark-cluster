@@ -243,7 +243,7 @@ class ClusterPage extends Component {
                         </Table.Row>
                         
                     )}
-                </Table> : <Segment>There are no slaves in this cluster</Segment>
+                </Table> : <Segment>There are no slaves in this cluster</Segment>}
             </div>
         </div>
     }
