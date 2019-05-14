@@ -116,7 +116,8 @@ class OpenstackDriver:
     def _check_instance(self, instance):
         if isinstance(instance, str):
             return self.conn.compute.find_server(instance)
-        return instance
+        else:
+            return self.conn.compute.find_server(instance.id)
 
     def _init_flavors(self):
         # delete useless flavors
@@ -266,6 +267,8 @@ class OpenstackDriver:
             for ip in addr:
                 if ip['OS-EXT-IPS:type'] == 'floating':
                     res.append(ip['addr'])
+
+        print(res)
         return res
 
     # network should be the network dedicated to the cluster, not the public one
