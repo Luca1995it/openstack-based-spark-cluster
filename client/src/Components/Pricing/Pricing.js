@@ -10,11 +10,7 @@ class Pricing extends Component {
         isLoading: false,
         flavors: []
     }
-
-    constructor(props) {
-        super(props);
-    }
-
+    
     componentDidMount(){
         this.setState({
             ...this.state,

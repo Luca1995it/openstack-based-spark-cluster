@@ -218,16 +218,21 @@ def process():
 def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
-    if id:
-        # get single cluster
-        return {
-            'cluster': db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
-        }
-    else:
-        # get all clusters of this user
-        return {
-            'cluster': []#list(db.clusters.find({'user_id': user['_id']}))
-        }
+    # get single cluster
+    return {
+        'cluster': db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
+    }
+
+# get list of all clusters (simplified entries not to overload openstack)
+@app.route('/api/cluster', method=['OPTIONS', 'GET'])
+@require_api_token
+def process():
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
+    # get all clusters of this user
+    return {
+        'cluster': list(db.clusters.find({'user_id': user['_id']}))
+    }
 
 # TODO: Cluster names collision!!!
 # Create a new cluster with the given parameters
