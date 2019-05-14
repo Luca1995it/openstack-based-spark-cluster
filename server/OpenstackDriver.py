@@ -83,6 +83,9 @@ class OpenstackDriver:
         if init_all:
             self._completely_reset_project()
 
+        self.restore_spark_service_commands_master = ["/usr/local/spark/sbin/stop-slaves.sh","/usr/local/spark/sbin/start-master.sh","/usr/local/spark/sbin/start-slaves.sh"]
+        self.restore_spark_service_commands_slave = lambda mem : f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {mem}M"
+
 
     def _completely_reset_project(self):
         # this function will cancel and re-create all the projects, flavors, instances, ips, groups and users
@@ -356,7 +359,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master,{"status":"active","floating_ip":master_floating_ip})
+        self._set_server_metadata(master,{"status":"active","floating_ip":master_floating_ip,"spark_role":"master"})
         print("Master set up correctly!")
 
 
@@ -398,8 +401,15 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,"status",value="active")
+        self._set_server_metadata(slave,{"status":"active","spark_role":"master","starting_memory":starting_memory})
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
+
+        slave = self.conn.compute.find_server(slave.id) #assures the complete object
+        #add slave address to master's slave file
+        assert(len(slave.addresses)==1)
+        slave_ip = list(s.addresses.values())[0][0]["addr"]
+        ssh = self._get_ssh_connection(self._get_server_metadata(master,key="floating_ip"))
+        ssh.exec_command(f"echo {slave_ip} >> /usr/local/spark/sbin/slaves")
 
     def _set_server_metadata(self,server,key,value=None):
         if value == None:
@@ -440,6 +450,7 @@ class OpenstackDriver:
         self.conn.compute.reboot_server(server,mode)
         self._set_server_metadata(server,key="status",value="rebooting")
 
+        #this is done in specific situations, standard behaviour comes from the "spark_role" value in the metadata
         if commands_on_boot != None:
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
@@ -448,6 +459,27 @@ class OpenstackDriver:
 
             self._remove_floating_ip_from_instance(server, server_floating_ip)
             self._set_server_metadata(server,key="status",value="active")
+
+        meta = self._get_server_metadata(server)
+        sr = meta["spark_role"]
+        if sr == "master":
+            self._set_server_metadata(server,key="status",value="settingup")
+            server_floating_ip = self._get_server_metadata(server,key="floating_ip")
+            ssh = self._get_ssh_connection(server_floating_ip)
+            ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
+            self._set_server_metadata(server,key="status",value="active")
+
+        elif sr == "slave":
+            mem = sr["starting_memory"]
+            
+            server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
+            ssh = self._get_ssh_connection(server_floating_ip)
+            self._set_server_metadata(server,key="status",value="settingup")
+            ssh.exec_command(self.restore_spark_service_commands_slave(mem))
+
+            self._remove_floating_ip_from_instance(server, server_floating_ip)
+            self._set_server_metadata(server,key="status",value="active")            
+
 
 
     def _stop_server(self,server):
