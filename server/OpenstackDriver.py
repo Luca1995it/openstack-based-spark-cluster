@@ -331,6 +331,8 @@ class OpenstackDriver:
 
     def _get_instance_info(self, server):
         server = self._check_instance(server)
+        if not server:
+            return None
         flavor = self.conn.compute.find_flavor(a.flavor['id'])
         public_ips, private_ips = self._get_floating_ips_from_instance(server), self._get_fixed_ips_from_instance(server)      
         number_running_app = self._get_server_running_application_number(server)
