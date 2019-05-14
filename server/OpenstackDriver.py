@@ -405,7 +405,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master,{"status":"ACTIVE", "spark_role":"master"})
+        self._set_server_metadata(master, {"status":"ACTIVE", "spark_role":"master"})
         print("Master set up correctly!")
 
 
@@ -458,16 +458,19 @@ class OpenstackDriver:
         ssh.exec_command(f"echo {slave_fixed_ips[0]} >> /usr/local/spark/sbin/slaves")
 
 
-    def _set_server_metadata(self,server,key,value=None):
+    def _set_server_metadata(self, server, key, value=None):
         if value == None:
-            self.conn.compute.set_server_metadata(server,**key)
+            self.conn.compute.set_server_metadata(server, **key)
         else:
-            self.conn.compute.set_server_metadata(server,**{key:value})
+            self.conn.compute.set_server_metadata(server, **{key: value})
 
     def _get_server_metadata(self, server, key=None):
         update = self.conn.compute.get_server_metadata(server)
         if key != None:
-            return update.metadata[key]
+            try:
+                return update.metadata[key]
+            except KeyError:
+                return "Unknown"
         return update.metadata
 
 
