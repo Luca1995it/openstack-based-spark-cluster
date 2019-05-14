@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Header, Loader, Divider, Table, Button, Label } from 'semantic-ui-react'
+import { Header, Loader, Divider, Table, Button, Label, Icon } from 'semantic-ui-react'
 import CreateCluster from './CreateCluster';
 import './Clusters.css';
 import axios from 'axios';
