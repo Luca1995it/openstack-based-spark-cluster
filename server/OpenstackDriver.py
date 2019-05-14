@@ -337,6 +337,8 @@ class OpenstackDriver:
         ssh = self._get_ssh_connection(master_floating_ip)
         print("Connected to master!")
 
+        self._set_server_metadata(master,"status":key="settingup")
+
         commands = [
             # private key to master, the public key will be copied to the slaves.
             f'cd ~/.ssh && echo "{cluster_private_key}" >> id_rsa',
@@ -373,6 +375,7 @@ class OpenstackDriver:
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)
+        self._set_server_metadata(master,"status":key="settingup")
         print("Connected to slave!")
 
         starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
@@ -400,9 +403,9 @@ class OpenstackDriver:
 
     def _set_server_metadata(self,server,key,value=None):
         if value == None:
-            self.conn.compute._set_server_metadata(server,**key)
+            self.conn.compute.set_server_metadata(server,**key)
         else:
-            self.conn.compute._set_server_metadata(server,**{key:value})
+            self.conn.compute.set_server_metadata(server,**{key:value})
 
     def _get_server_metadata(self,server,key=None):
         update = self.conn.compute.get_server_metadata(server)
@@ -425,15 +428,22 @@ class OpenstackDriver:
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
 
+    def _get_server_status(self,server):
+        s = self.conn.compute.find_server(server.id) #gives all the information correctly
+        if s.status == "BUILD":
+            return "booting"
+        else:
+            return self._get_server_metadata(s,key="status")
+
 
     def _reboot_server(self,server,mode="HARD",commands_on_boot=None):
         self.conn.compute.reboot_server(server,mode)
+        self._set_server_metadata(server,key="status",value="rebooting")
 
         if commands_on_boot != None:
-            self._set_server_metadata(server,key="status",value="rebooting")
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
-
+            self._set_server_metadata(server,key="status",value="settingup")
             ssh.exec_command("\n".join(commands_on_boot))
 
             self._remove_floating_ip_from_instance(server, server_floating_ip)
