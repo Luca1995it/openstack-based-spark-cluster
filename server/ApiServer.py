@@ -219,8 +219,9 @@ def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
     # get single cluster
+    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
     return {
-        'cluster': db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(id)})
+        'cluster': result['cluster']
     }
 
 # get list of all clusters (simplified entries not to overload openstack)
@@ -231,7 +232,7 @@ def process():
     user = db.users.find_one({'token': token})
     # get all clusters of this user
     return {
-        'cluster': list(db.clusters.find({'user_id': user['_id']}))
+        'cluster': [res['cluster'] for res in db.clusters.find({'user_id': user['_id']})]
     }
 
 # TODO: Cluster names collision!!!

@@ -35,12 +35,11 @@ class Login extends Component {
             .then(res => {
                 let result = res.data;
                 switch (result.status) {
-                    case "OK":                        
-                        this.props.setToken(result.token);
+                    case "OK":
                         this.setState({
                             ...this.state,
                             isLoading: false
-                        });
+                        }, () => this.props.setToken(result.token));
                         break;
                     case "MALFORMED_JSON":
                     case "MISSING_PARAMS":
