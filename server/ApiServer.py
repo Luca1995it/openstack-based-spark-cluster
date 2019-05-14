@@ -367,9 +367,7 @@ def process(cluster_id, id):
         
     result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)})
     cluster = result['cluster']
-    openstackdriver._delete_server(id)
-    cluster.slaves_ids.remove(id)
-
+    cluster = openstackdriver._remove_slave(cluster, id)
     db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)},
                            {'$set': {'cluster': cluster}})
     return "OK"

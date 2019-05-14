@@ -18,18 +18,21 @@ class Pricing extends Component {
     componentDidMount(){
         this.setState({
             ...this.state,
-            flavors: []
+            flavors: [],
+            isLoading: true
         }, () => {
             axios.get('/api/flavor').then(res => {
                 this.setState({
                     ...this.state,
-                    flavors: res.data.flavor
+                    flavors: res.data.flavor,
+                    isLoading: false
                 });
             }).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,
-                    flavors: []
+                    flavors: [],
+                    isLoading: false
                 });
             })
         });
@@ -37,7 +40,6 @@ class Pricing extends Component {
 
     render() {
         if (this.state.isLoading) return <Loader active inline='centered' />
-
         return (
             <div className='homeContainer'>
                 <div className="homeSubContainer">

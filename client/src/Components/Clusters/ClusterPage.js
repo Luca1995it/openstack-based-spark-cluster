@@ -130,41 +130,40 @@ class ClusterPage extends Component {
                             <Table.HeaderCell>Disk</Table.HeaderCell>
                             <Table.HeaderCell>Swap</Table.HeaderCell>
                             <Table.HeaderCell>Status</Table.HeaderCell>
+                            <Table.HeaderCell>Spark Status</Table.HeaderCell>
+                            <Table.HeaderCell>Running jobs</Table.HeaderCell>
                             <Table.HeaderCell>IP(s)</Table.HeaderCell>
                             <Table.HeaderCell>Actions</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     {this.state.master ? <Table.Row>
                         <Table.Cell>{this.state.master.name}</Table.Cell>
-                        <Table.Cell>{this.state.master.vcpus}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.ram} MB`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.disk} GB`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.swap} GB`}</Table.Cell>
+                        <Table.Cell>{this.state.master.flavor.vcpus}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.flavor.ram} MB`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.flavor.disk} GB`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.flavor.swap} GB`}</Table.Cell>
                         <Table.Cell>{`${this.state.master.status}`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.spark_status}`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.number_running_app}`}</Table.Cell>
                         <Table.Cell>{`[${this.state.master.public_ips.join(", ")}]`}</Table.Cell>
                         <Table.Cell>
                             <Button circular color='green'
                                 onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status != 'stopped'}
+                                disabled={this.state.master.status != 'STOPPED'}
                             >
                                 Start
                             </Button>
                             <Button circular color='yellow'
                                 onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status != 'active'}
+                                disabled={this.state.master.status != 'ACTIVE'}
                             >
                                 Restart
                             </Button>
                             <Button circular color='red'
                                 onClick={() => this.restart(this.state.master.id)}
-                                disabled={this.state.master.status != 'active'}
+                                disabled={this.state.master.status != 'ACTIVE'}
                             >
                                 Shutdown
-                            </Button>
-                            <Button circular color='white' inverted
-                                onClick={() => this.delete(this.state.master.id)}
-                            >
-                                Delete
                             </Button>
                         </Table.Cell>
                     </Table.Row> : null}
@@ -179,6 +178,8 @@ class ClusterPage extends Component {
                             <Table.HeaderCell>Disk</Table.HeaderCell>
                             <Table.HeaderCell>Swap</Table.HeaderCell>
                             <Table.HeaderCell>Status</Table.HeaderCell>
+                            <Table.HeaderCell>Spark Status</Table.HeaderCell>
+                            <Table.HeaderCell>Running jobs</Table.HeaderCell>
                             <Table.HeaderCell>IP(s)</Table.HeaderCell>
                             <Table.HeaderCell>Actions</Table.HeaderCell>
                         </Table.Row>
@@ -187,28 +188,30 @@ class ClusterPage extends Component {
                     {this.state.slaves.map(slave => 
                         <Table.Row>
                             <Table.Cell>{slave.name}</Table.Cell>
-                            <Table.Cell>{slave.vcpus}</Table.Cell>
-                            <Table.Cell>{`${slave.ram} MB`}</Table.Cell>
-                            <Table.Cell>{`${slave.disk} GB`}</Table.Cell>
-                            <Table.Cell>{`${slave.swap} GB`}</Table.Cell>
+                            <Table.Cell>{slave.flavor.vcpus}</Table.Cell>
+                            <Table.Cell>{`${slave.flavor.ram} MB`}</Table.Cell>
+                            <Table.Cell>{`${slave.flavor.disk} GB`}</Table.Cell>
+                            <Table.Cell>{`${slave.flavor.swap} GB`}</Table.Cell>
                             <Table.Cell>{`${slave.status}`}</Table.Cell>
+                            <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
+                            <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
                             <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
                             <Table.Cell>
                                 <Button circular color='green'
                                     onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status != 'stopped'}
+                                    disabled={slave.status != 'STOPPED'}
                                 >
                                     Start
                                 </Button>
                                 <Button circular color='yellow'
                                     onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status != 'active'}
+                                    disabled={slave.status != 'ACTIVE'}
                                 >
                                     Restart
                                 </Button>
                                 <Button circular color='red'
                                     onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status != 'active'}
+                                    disabled={slave.status != 'ACTIVE'}
                                 >
                                     Shutdown
                                 </Button>

@@ -49,6 +49,7 @@ class Cluster:
         self.cluster_private_key = cluster_private_key
         self.cluster_public_key = cluster_public_key
 
+
 class Flavor:
     def __init__(self, flavor):
         self.name = flavor.name,
@@ -58,13 +59,22 @@ class Flavor:
         self.swap = flavor.swap,
         self.id = flavor.id
 
+
 class Instance:
-    def __init__(self, instance, private_ips=[], public_ips=[]):
+    def __init__(self, instance, flavor, number_running_app, spark_status, status, private_ips=[], public_ips=[]):
         self.name = instance.name
-        self.status = instance.status
+        self.number_running_app = number_running_app
+        self.spark_status = spark_status
+        self.status = status
         self.id = instance.id
         self.private_ips = private_ips
         self.public_ips = public_ips
+        self.flavor = {
+            "vcpus": flavor.vcpus,
+            "ram": flavor.ram,
+            "disk": flavor.disk,
+            "swap": flavor.swap
+        }
 
 
 # main openstack driver to interact with vms
@@ -83,8 +93,13 @@ class OpenstackDriver:
         if init_all:
             self._completely_reset_project()
 
-        self.restore_spark_service_commands_master = ["/usr/local/spark/sbin/stop-slaves.sh","/usr/local/spark/sbin/start-master.sh","/usr/local/spark/sbin/start-slaves.sh"]
-        self.restore_spark_service_commands_slave = lambda mem : f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {mem}M"
+        self.restore_spark_service_commands_master = [
+            "/usr/local/spark/sbin/stop-slaves.sh",
+            "/usr/local/spark/sbin/start-master.sh",
+            "/usr/local/spark/sbin/start-slaves.sh"
+        ]
+        self.restore_spark_service_commands_slave = \
+            lambda mem : f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {mem}M"
 
 
     def _completely_reset_project(self):
@@ -97,6 +112,12 @@ class OpenstackDriver:
         self._init_project()
         self._init_floating_ips()
 
+    
+    # if instance is the string id, find the real instance, otherwise return it
+    def _check_instance(self, instance):
+        if isinstance(instance, str):
+            return self.conn.compute.find_server(instance)
+        return instance
 
     def _init_flavors(self):
         # delete useless flavors
@@ -209,14 +230,14 @@ class OpenstackDriver:
 
     # create an instance of an ssh connection that will be used to set up the nodes of the cluster
     # this function tries up to MAX_TRIES times to connect, because ubuntu takes some time to be ready
-    def _get_ssh_connection(self, host, key_file='./spark_private.key'):
+    def _get_ssh_connection(self, host, private_file_path='./spark_private.key'):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         tries = 0
         while tries < MAX_TRIES:
             try:
                 print("Connection trial number ", tries)
-                ssh.connect(host, key_filename=key_file, timeout=5)
+                ssh.connect(host, key_filename=private_file_path, timeout=5)
                 return ssh
             except Exception as e:
                 print("Instance not yet ready:", e)
@@ -224,8 +245,31 @@ class OpenstackDriver:
             sleep(5)
         return None
 
+    # get list of fixed ips of this instance
+    def _get_fixed_ips_from_instance(self, instance):
+        instance = self._check_instance(instance)
+        res = []
+        if 'addresses' not in instance:
+            instance = self.conn.compute.find_server(instance.id)
+        for addr in instance.addresses.values():
+            if addr['OS-EXT-IPS:type'] == 'fixed':
+                res.append(addr['addr'])
+        return res
+
+    # get list of floating ips of this instance
+    def _get_floating_ips_from_instance(self, instance):
+        instance = self._check_instance(instance)
+        res = []
+        if 'addresses' not in instance:
+            instance = self.conn.compute.find_server(instance.id)
+        for addr in instance.addresses.values():
+            if addr['OS-EXT-IPS:type'] == 'fixed':
+                res.append(addr['addr'])
+        return res
+
     # network should be the network dedicated to the cluster, not the public one
     def _get_fixed_ip_from_instance_and_network(self, instance, network):
+        instance = self._check_instance(instance)
         if network.name in instance.addresses:
             for addr in instance.addresses[network.name]:
                 if addr['OS-EXT-IPS:type'] == 'fixed':
@@ -234,6 +278,7 @@ class OpenstackDriver:
     
     # network should be the network dedicated to the cluster, not the public one
     def _get_floating_ip_from_instance_and_network(self, instance, network):
+        instance = self._check_instance(instance)
         if network.name in instance.addresses:
             for addr in instance.addresses[network.name]:
                 if addr['OS-EXT-IPS:type'] == 'floating':
@@ -241,7 +286,7 @@ class OpenstackDriver:
         return None
 
 
-    def _create_network(self,name=""):
+    def _create_network(self, name=""):
         net = self.conn.network.create_network(name=f"{name}_network")
         subnet = self.conn.network.create_subnet(name=f"{name}_subnet",
                                                  network_id=net.id,
@@ -256,13 +301,14 @@ class OpenstackDriver:
 
     # create and link a floating ip to a given instance
     def _add_floating_ip_to_instance(self, instance, network):
+        instance = self._check_instance(instance)
         floating_ip = self._create_floating_ip(network)
         print("Created floating ip", floating_ip)
         print("Adding floating ip to instance: ", instance.name)
         self.conn.compute.add_floating_ip_to_server(instance, address=floating_ip.floating_ip_address)
         return floating_ip.floating_ip_address
 
-    # release a floating ip and delete che istance
+    # release a floating ip and delete it
     def _remove_floating_ip(self, floating_ip):
         self.conn.network.delete_ip(floating_ip)
 
@@ -274,27 +320,24 @@ class OpenstackDriver:
 
 
     def _create_instance(self, name, flavor_name='small-spark-node', image_name='xenial-spark-ready-image', network_name='public', security_group_name='spark-security-group'):
-        #todo add keypair
         img = self.conn.compute.find_image(image_name)
         flv = self.conn.compute.find_flavor(flavor_name)
         net = self.conn.network.find_network(network_name)
         return self.conn.compute.create_server(name=name, image_id=img.id, flavor_id=flv.id, networks=[{'uuid': net.id}], security_groups=[{'name': security_group_name}])
 
 
-    def _delete_instance(self, instance_id):
-        self.conn.compute.delete_server(instance_id)
+    def _delete_instance(self, instance):
+        self.conn.compute.delete_server(instance)
 
 
-    def _get_instance_info(self, server_id):
-        server = self.conn.compute.find_server(server_id)
-        public_ips, private_ips = [], []
-        for network, ips in server.addresses:
-            for ip in ips:
-                if ip['OS-EXT-IPS:type'] == 'fixed':
-                    private_ips.append(ip['addr'])
-                elif ip['OS-EXT-IPS:type'] == 'floating':
-                    public_ips.append(ip['addr'])
-        return Instance(server, private_ips, public_ips)
+    def _get_instance_info(self, server):
+        server = self._check_instance(server)
+        flavor = self.conn.compute.find_flavor(a.flavor['id'])
+        public_ips, private_ips = self._get_floating_ips_from_instance(server), self._get_fixed_ips_from_instance(server)      
+        number_running_app = self._get_server_running_application_number(server)
+        spark_status = self._get_server_spark_status(server)
+        status = self._get_server_status(server)
+        return Instance(server, flavor, number_running_app, spark_status, status, private_ips, public_ips)
 
 
     def _wait_instance(self, instance):
@@ -340,7 +383,7 @@ class OpenstackDriver:
         ssh = self._get_ssh_connection(master_floating_ip)
         print("Connected to master!")
 
-        self._set_server_metadata(master, "status", key="settingup")
+        self._set_server_metadata(master, "status", key="SETTING-UP")
 
         commands = [
             # private key to master, the public key will be copied to the slaves.
@@ -359,7 +402,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master,{"status":"active","floating_ip":master_floating_ip,"spark_role":"master"})
+        self._set_server_metadata(master,{"status":"ACTIVE","floating_ip":master_floating_ip,"spark_role":"master"})
         print("Master set up correctly!")
 
 
@@ -378,7 +421,7 @@ class OpenstackDriver:
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
 
         ssh = self._get_ssh_connection(slave_floating_ip)
-        self._set_server_metadata(master, "status", key="settingup")
+        self._set_server_metadata(master, "status", key="SETTING-UP")
         print("Connected to slave!")
 
         starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
@@ -402,18 +445,16 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,{"status":"active","spark_role":"master","starting_memory":starting_memory})
+        self._set_server_metadata(slave,{"status":"ACTIVE","spark_role":"master","starting_memory":starting_memory})
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
-        slave = self.conn.compute.find_server(slave.id) #assures the complete object
-        #add slave address to master's slave file
-        assert(len(slave.addresses)==1)
-        slave_ip = list(s.addresses.values())[0][0]["addr"]
-        ssh = self._get_ssh_connection(self._get_server_metadata(master,key="floating_ip"))
-        ssh.exec_command(f"echo {slave_ip} >> /usr/local/spark/sbin/slaves")
+        slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
+    
+        ssh = self._get_ssh_connection(self._get_server_metadata(master, key="floating_ip"))
+        ssh.exec_command(f"echo {slave_fixed_ips[0]} >> /usr/local/spark/sbin/slaves")
+
 
     def _set_server_metadata(self,server,key,value=None):
-
         if value == None:
             self.conn.compute.set_server_metadata(server,**key)
         else:
@@ -427,73 +468,70 @@ class OpenstackDriver:
         return update.metadata
 
 
-    def _get_server_running_application_number(self,server):
-        ip = self._get_server_metadata(server,key="floating_ip") #todo
+    def _get_server_running_application_number(self, server):
+        ip = self._get_server_metadata(server, key="floating_ip") #todo
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
         return int(re.search("\d",str(line)).group(0))
 
     def _get_server_spark_status(self, server):
-        ip = self._get_server_metadata(server,key="floating_ip") #todo
+        ip = self._get_server_metadata(server, key="floating_ip") #todo
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
 
-    def _get_server_status(self,server):
+    def _get_server_status(self, server):
         s = self.conn.compute.find_server(server.id) #gives all the information correctly
         if s.status == "BUILD":
-            return "booting"
+            return "BOOTING"
         else:
-            return self._get_server_metadata(s,key="status")
+            return self._get_server_metadata(s, key="status")
 
 
-    def _reboot_server(self,server,mode="HARD",commands_on_boot=None):
-        self.conn.compute.reboot_server(server,mode)
-        self._set_server_metadata(server,key="status",value="rebooting")
+    def _reboot_server(self, server, mode="HARD", commands_on_boot=None):
+        self.conn.compute.reboot_server(server, mode)
+        self._set_server_metadata(server, key="status", value="REBOOTING")
+
+        self._wait_instance(server) # wait to be newly on
 
         #this is done in specific situations, standard behaviour comes from the "spark_role" value in the metadata
         if commands_on_boot != None:
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
-            self._set_server_metadata(server,key="status",value="settingup")
+            self._set_server_metadata(server, key="status", value="SETTING-UP")
             ssh.exec_command("\n".join(commands_on_boot))
 
             self._remove_floating_ip_from_instance(server, server_floating_ip)
-            self._set_server_metadata(server,key="status",value="active")
+            self._set_server_metadata(server, key="status", value="ACTIVE")
 
         meta = self._get_server_metadata(server)
         sr = meta["spark_role"]
         if sr == "master":
-            self._set_server_metadata(server,key="status",value="settingup")
+            self._set_server_metadata(server, key="status", value="SETTING-UP")
             server_floating_ip = self._get_server_metadata(server,key="floating_ip")
             ssh = self._get_ssh_connection(server_floating_ip)
             ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
-            self._set_server_metadata(server,key="status",value="active")
+            self._set_server_metadata(server, key="status", value="ACTIVE")
 
         elif sr == "slave":
             mem = sr["starting_memory"]
             
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
-            self._set_server_metadata(server,key="status",value="settingup")
+            self._set_server_metadata(server, key="status", value="SETTING-UP")
             ssh.exec_command(self.restore_spark_service_commands_slave(mem))
 
             self._remove_floating_ip_from_instance(server, server_floating_ip)
-            self._set_server_metadata(server,key="status",value="active")            
-
-
+            self._set_server_metadata(server, key="status", value="ACTIVE")            
 
     def _stop_server(self,server_id):
-        self._set_server_metadata(server_id, "status", value="stopped")
+        self._set_server_metadata(server_id, "status", value="STOPPED")
         self.conn.compute.stop_server(server_id)
-
-    def _delete_server(self, server_id):
-        self.conn.compute.delete_server(server_id)
 
     def _start_server(self, server_id):
         self.conn.compute.start_server(server_id)
-        self._set_server_metadata(server_id, "status", value="active")
+        self._set_server_metadata(server_id, "status", value="ACTIVE")
 
 
     # main function
@@ -544,8 +582,15 @@ class OpenstackDriver:
         return cluster
 
 
+
     # destroy a slave node from the cluster
     def _remove_slave(self, cluster, slave_id):
+        ips = self._get_fixed_ips_from_instance(slave_id)
+        command = [f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in ips]
+        master = self._check_instance(cluster.master_id)
+        master_floating_ip = self._get_floating_ips_from_instance(master)[0]
+        ssh = self._get_ssh_connection(master_floating_ip)
+        ssh.exec_command("\n".join(command))
         self._delete_instance(slave_id)
         cluster.slaves_ids.remove(slave_id)
         return cluster
