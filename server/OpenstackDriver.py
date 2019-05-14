@@ -576,15 +576,14 @@ class OpenstackDriver:
     def _add_slave(self, cluster, flavor_name='small-spark-node'):
         print("Create slave", flavor_name)
         # retrieve the master
-        print(cluster)
         master = self.conn.compute.find_server(cluster["master_id"])
         network = self.conn.network.find_network(cluster["network_id"])
-        slave_name = f'{cluster.name}_slave{len(cluster["slaves_ids"])}'
+        slave_name = f'{cluster["name"]}_slave{len(cluster["slaves_ids"])}'
         # create the slave
         print("Creating...")
         slave = self._create_instance(slave_name, flavor_name=flavor_name, network_name=network.name)
         # start slave set up in separate thread
-        threading.Thread(target=self._setup_slave, args=(slave, master, network, cluster.cluster_public_key)).start()
+        threading.Thread(target=self._setup_slave, args=(slave, master, network, cluster["cluster_public_key"])).start()
         # add slave id to cluster instance
         cluster.slaves_ids.append(slave.id)
         return cluster
