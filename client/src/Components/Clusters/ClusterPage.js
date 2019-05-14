@@ -25,6 +25,8 @@ class ClusterPage extends Component {
             isLoading: true,
         }, () => {
             axios.all(requests).then(res => {
+                console.log(res);
+                
                 this.setState({
                     ...this.state,
                     master: res[0].data.instance,
