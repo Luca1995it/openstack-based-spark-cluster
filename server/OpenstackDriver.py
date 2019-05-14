@@ -585,7 +585,7 @@ class OpenstackDriver:
         # start slave set up in separate thread
         threading.Thread(target=self._setup_slave, args=(slave, master, network, cluster["cluster_public_key"])).start()
         # add slave id to cluster instance
-        cluster.slaves_ids.append(slave.id)
+        cluster["slaves_ids"].append(slave.id)
         return cluster
 
 
