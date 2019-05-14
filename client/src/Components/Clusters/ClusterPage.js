@@ -118,6 +118,10 @@ class ClusterPage extends Component {
                     cluster={this.props.cluster}
                     refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/ 
                     setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
+                <Button circular onClick={this.refresh}>
+                    <Icon name='refresh'/>
+                    Refresh
+                </Button>
                 <Divider />
                 <Header size='small'>Master</Header>
                 <Table celled>
