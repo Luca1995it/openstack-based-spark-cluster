@@ -405,7 +405,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master,{"status":"ACTIVE","floating_ip":master_floating_ip,"spark_role":"master"})
+        self._set_server_metadata(master,{"status":"ACTIVE", "spark_role":"master"})
         print("Master set up correctly!")
 
 
@@ -448,12 +448,13 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,{"status":"ACTIVE","spark_role":"master","starting_memory":starting_memory})
+        self._set_server_metadata(slave,{"status":"ACTIVE", "spark_role":"master", "starting_memory":starting_memory})
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
         slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
-    
-        ssh = self._get_ssh_connection(self._get_server_metadata(master, key="floating_ip"))
+        master_floating_ip = self._get_floating_ips_from_instance(master)[0]
+
+        ssh = self._get_ssh_connection(master_floating_ip)
         ssh.exec_command(f"echo {slave_fixed_ips[0]} >> /usr/local/spark/sbin/slaves")
 
 
@@ -471,14 +472,14 @@ class OpenstackDriver:
 
 
     def _get_server_running_application_number(self, server):
-        ip = self._get_server_metadata(server, key="floating_ip") #todo
+        ip = self._get_floating_ips_from_instance(server)[0]
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
         return int(re.search("\d",str(line)).group(0))
 
     def _get_server_spark_status(self, server):
-        ip = self._get_server_metadata(server, key="floating_ip") #todo
+        ip = self._get_floating_ips_from_instance(server)[0]
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
@@ -511,7 +512,7 @@ class OpenstackDriver:
         sr = meta["spark_role"]
         if sr == "master":
             self._set_server_metadata(server, key="status", value="SETTING-UP")
-            server_floating_ip = self._get_server_metadata(server,key="floating_ip")
+            server_floating_ip = self._get_floating_ips_from_instance(server)[0]
             ssh = self._get_ssh_connection(server_floating_ip)
             ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
             self._set_server_metadata(server, key="status", value="ACTIVE")
