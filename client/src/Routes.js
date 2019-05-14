@@ -19,8 +19,6 @@ const cookie = new Cookies();
 axios.defaults.baseURL = config.api_server;
 document.title = config.project_name;
 
-
-
 class Routes extends Component {
 
     constructor(props){

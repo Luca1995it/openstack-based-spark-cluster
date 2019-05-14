@@ -140,7 +140,7 @@ class ClusterPage extends Component {
                         <Table.Cell>{this.state.master.flavor.vcpus}</Table.Cell>
                         <Table.Cell>{`${this.state.master.flavor.ram} MB`}</Table.Cell>
                         <Table.Cell>{`${this.state.master.flavor.disk} GB`}</Table.Cell>
-                        <Table.Cell>{`${this.state.master.flavor.swap} GB`}</Table.Cell>
+                        <Table.Cell>{`${this.state.master.flavor.swap} MB`}</Table.Cell>
                         <Table.Cell>{`${this.state.master.status}`}</Table.Cell>
                         <Table.Cell>{`${this.state.master.spark_status}`}</Table.Cell>
                         <Table.Cell>{`${this.state.master.number_running_app}`}</Table.Cell>
@@ -190,7 +190,7 @@ class ClusterPage extends Component {
                             <Table.Cell>{slave.flavor.vcpus}</Table.Cell>
                             <Table.Cell>{`${slave.flavor.ram} MB`}</Table.Cell>
                             <Table.Cell>{`${slave.flavor.disk} GB`}</Table.Cell>
-                            <Table.Cell>{`${slave.flavor.swap} GB`}</Table.Cell>
+                            <Table.Cell>{`${slave.flavor.swap} MB`}</Table.Cell>
                             <Table.Cell>{`${slave.status}`}</Table.Cell>
                             <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
                             <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>

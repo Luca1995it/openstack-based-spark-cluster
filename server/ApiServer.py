@@ -166,6 +166,8 @@ def process():
 @app.route('/api/sshpair', method=['OPTIONS', 'POST'])
 @require_api_token
 def process():
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
     try:
         parameters = json.load(request.body)
     except json.decoder.JSONDecodeError as error:
@@ -178,8 +180,7 @@ def process():
             'status': "MISSING_PARAMS",
             'message': 'name or key missing'
         }
-    token = request.get_header('X-CSRF-Token')
-    user = db.users.find_one({'token': token})
+    
     db.sshpairs.insert_one({'user_id': user['_id'], 'name': parameters['name'], 'key': parameters['key']})
     return "ok"
 
@@ -187,9 +188,9 @@ def process():
 @app.route('/api/sshpair/<id>', method=['OPTIONS', 'DELETE'])
 @require_api_token
 def process(id):
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
     if id:
-        token = request.get_header('X-CSRF-Token')
-        user = db.users.find_one({'token': token})
         db.sshpairs.delete_one({'user_id': user['_id'], '_id': ObjectId(id)})
         return "ok"
     else:
@@ -225,7 +226,7 @@ def process(id):
     else:
         # get all clusters of this user
         return {
-            'cluster': list(db.clusters.find({'user_id': user['_id']}))
+            'cluster': []#list(db.clusters.find({'user_id': user['_id']}))
         }
 
 # TODO: Cluster names collision!!!

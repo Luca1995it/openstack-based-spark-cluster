@@ -100,9 +100,9 @@ class Clusters extends Component {
                         <Table celled structured>
                             <Table.Header>
                                 <Table.Row>
-                                    <Table.HeaderCell rowSpan='4'>Name</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='6'>Name</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='4'>Number of nodes</Table.HeaderCell>
-                                    <Table.HeaderCell rowSpan='4'>Actions</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='6'>Actions</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 

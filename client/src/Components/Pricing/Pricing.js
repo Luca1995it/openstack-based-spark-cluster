@@ -64,7 +64,7 @@ class Pricing extends Component {
                                     <Table.Cell>{flavor.vcpus}</Table.Cell>
                                     <Table.Cell>{`${flavor.ram} MB`}</Table.Cell>
                                     <Table.Cell>{`${flavor.disk} GB`}</Table.Cell>
-                                    <Table.Cell>{`${flavor.swap} GB`}</Table.Cell>
+                                    <Table.Cell>{`${flavor.swap} MB`}</Table.Cell>
                                 </Table.Row>)}
                         </Table.Body>
                     </Table>
