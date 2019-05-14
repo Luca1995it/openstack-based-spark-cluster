@@ -111,7 +111,7 @@ class Clusters extends Component {
 
                             <Table.Body>
                                 {this.state.clusters.map(clus =>
-                                    <Table.Row>
+                                    <Table.Row key={clus.id}>
                                         <Table.Cell>{clus.name}</Table.Cell>
                                         <Table.Cell>
                                             {clus.slaves_ids.length}

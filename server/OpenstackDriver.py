@@ -384,7 +384,7 @@ class OpenstackDriver:
         ssh = self._get_ssh_connection(master_floating_ip)
         print("Connected to master!")
 
-        self._set_server_metadata(master, "status", key="SETTING-UP")
+        self._set_server_metadata(master, "status", value="SETTING-UP")
 
         commands = [
             # private key to master, the public key will be copied to the slaves.
