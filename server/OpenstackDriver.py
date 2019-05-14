@@ -398,7 +398,7 @@ class OpenstackDriver:
         self._set_server_metadata(slave,"status",value="active")
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
-    def _set_server_metadata(self,server,key,value=None):
+    def _set_server_metadata(self, server, key, value=None):
         if value == None:
             self.conn.compute._set_server_metadata(server,**key)
         else:
@@ -419,7 +419,7 @@ class OpenstackDriver:
         line = soup.find("span",{"id":"running-app"}).find("a") #extracts the content of the line with the number of running applications
         return int(re.search("\d",str(line)).group(0))
 
-    def _get_server_spark_status(self,server)
+    def _get_server_spark_status(self, server):
         ip = self._get_server_metadata(server,key="floating_ip") #todo
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)

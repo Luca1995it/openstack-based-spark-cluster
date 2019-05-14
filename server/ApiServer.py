@@ -275,9 +275,10 @@ def process(id):
     user = db.users.find_one({'token': token})
     # get all clusters of this user
     if id:
-        return openstackdriver._get_instance_info(id)
+        return {
+            'instance': openstackdriver._get_instance_info(id)
+        }
     return None
-
 
 @app.route('/api/instance', method=['OPTIONS', 'POST'])
 @require_api_token
@@ -297,6 +298,26 @@ def process(id):
             'status': "MISSING_PARAMS",
             'message': 'name or key missing'
         }
+
+@app.route('/api/instance/<action>/<id>', method=['OPTIONS', 'PUT'])
+@require_api_token
+def process(action, id):
+    try:
+        parameters = json.load(request.body)
+    except json.decoder.JSONDecodeError as error:
+        return {
+            'status': "MALFORMED_JSON",
+            'message': "Malformed JSON body in request"
+        }
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
+
+    if 'action' is None or 'id' is None:
+        return {
+            'status': "MISSING_PARAMS",
+            'message': 'action or id missing'
+        }
+    
 
 
 
