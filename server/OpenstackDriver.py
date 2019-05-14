@@ -35,47 +35,7 @@ class NetAddr:
     def next(self):
         self.curr_o3 = self.next_o3
         self.next_o3 += 1
-
-
-# classes that will be used with the client web-app to simplify communications
-class Cluster:
-    def __init__(self, name, master_id, subnet_id, network_id, router_id, slaves_ids, cluster_private_key, cluster_public_key):
-        self.name = name
-        self.master_id = master_id
-        self.slaves_ids = slaves_ids
-        self.network_id = network_id
-        self.router_id = router_id
-        self.subnet_id = subnet_id
-        self.cluster_private_key = cluster_private_key
-        self.cluster_public_key = cluster_public_key
-
-
-class Flavor:
-    def __init__(self, flavor):
-        self.name = flavor.name,
-        self.ram = flavor.ram,
-        self.vcpus = flavor.vcpus,
-        self.disk = flavor.disk,
-        self.swap = flavor.swap,
-        self.id = flavor.id
-
-
-class Instance:
-    def __init__(self, instance, flavor, number_running_app, spark_status, status, private_ips=[], public_ips=[]):
-        self.name = instance.name
-        self.number_running_app = number_running_app
-        self.spark_status = spark_status
-        self.status = status
-        self.id = instance.id
-        self.private_ips = private_ips
-        self.public_ips = public_ips
-        self.flavor = {
-            "vcpus": flavor.vcpus,
-            "ram": flavor.ram,
-            "disk": flavor.disk,
-            "swap": flavor.swap
-        }
-
+      
 
 # main openstack driver to interact with vms
 class OpenstackDriver:
@@ -100,6 +60,45 @@ class OpenstackDriver:
         ]
         self.restore_spark_service_commands_slave = \
             lambda mem : f"/usr/local/spark/sbin/start-slave.sh spark://master:7077 --memory {mem}M"
+
+    # functions that will be used with the client web-app to simplify communications
+
+    @staticmethod
+    def create_cluster(name, master_id, subnet_id, network_id, router_id, slaves_ids, cluster_private_key, cluster_public_key):
+        return {
+            'name': name,
+            'master_id': master_id,
+            'slaves_ids': slaves_ids,
+            'network_id': network_id,
+            'router_id': router_id,
+            'subnet_id': subnet_id,
+            'cluster_private_key': cluster_private_key,
+            'cluster_public_key': cluster_public_key
+        }
+
+    @staticmethod
+    def create_flavor(flavor):
+        return {
+            'name': flavor.name,
+            'ram': flavor.ram,
+            'vcpus': flavor.vcpus,
+            'disk': flavor.disk,
+            'swap': flavor.swap,
+            'id': flavor.id
+        }
+
+    @staticmethod
+    def create_instance(instance, flavor, number_running_app, spark_status, status, private_ips=[], public_ips=[]):
+        return {
+            'name': instance.name,
+            'number_running_app': number_running_app,
+            'spark_status': spark_status,
+            'status': status,
+            'id': instance.id,
+            'private_ips': private_ips,
+            'public_ips': public_ips,
+            'flavor': create_flavor(flavor)
+        }
 
 
     def _completely_reset_project(self):
@@ -210,7 +209,7 @@ class OpenstackDriver:
 
     # get a list of flavors (to be shown in the web-app)
     def _get_flavors(self):
-        return [Flavor(f) for f in self.conn.compute.flavors()]
+        return [OpenstackDriver.create_flavor(f) for f in self.conn.compute.flavors()]
 
 
     def _get_networks(self):
@@ -337,7 +336,7 @@ class OpenstackDriver:
         number_running_app = self._get_server_running_application_number(server)
         spark_status = self._get_server_spark_status(server)
         status = self._get_server_status(server)
-        return Instance(server, flavor, number_running_app, spark_status, status, private_ips, public_ips)
+        return OpenstackDriver.create_instance(server, flavor, number_running_app, spark_status, status, private_ips, public_ips)
 
 
     def _wait_instance(self, instance):
@@ -562,7 +561,7 @@ class OpenstackDriver:
         threading.Thread(target=self._setup_master, args=(master, network, user_ssh_key, cluster_private_key)).start()
         
         # return the Cluster object
-        return Cluster(name, master.id, subnet.id, network.id, router.id, [], cluster_private_key, cluster_public_key)
+        return OpenstackDriver.create_cluster(name, master.id, subnet.id, network.id, router.id, [], cluster_private_key, cluster_public_key)
 
 
     # add a slave to the cluster
