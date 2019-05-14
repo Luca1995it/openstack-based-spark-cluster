@@ -316,11 +316,11 @@ def process(cluster_id):
             'message': 'flavor_name or quantity or cluster_id missing'
         }
     
-    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(parameters['cluster_id'])})
+    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)})
     cluster = result['cluster']
     for i in range(parameters['quantity']):
         cluster = openstackdriver._add_slave(cluster, flavor_name=parameters['flavor_name'])
-    db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(parameters['cluster_id'])},
+    db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)},
                            {'$set': {'cluster': cluster}})
     return "OK"
 
