@@ -285,8 +285,10 @@ def process(id):
 @app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
 @require_api_token
 def process(id):
+    res =  openstackdriver._get_instance_info(id)
+    print(res)
     return {
-        'instance': openstackdriver._get_instance_info(id)
+        'instance': res
     }
     
 
