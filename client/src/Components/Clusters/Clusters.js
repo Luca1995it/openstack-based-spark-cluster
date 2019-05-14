@@ -82,7 +82,7 @@ class Clusters extends Component {
 
     render() {
         if (this.state.isLoading) return <Loader active inline='centered' />
-        if (this.state.status) return <ClusterPage back={this.back} cluster={this.status} />
+        if (this.state.status) return <ClusterPage back={this.back} cluster={this.state.status} />
         return (
             <div className='homeContainer'>
                 <div className="homeSubContainer">
