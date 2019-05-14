@@ -463,11 +463,10 @@ class OpenstackDriver:
         else:
             self.conn.compute.set_server_metadata(server,**{key:value})
 
-    def _get_server_metadata(self,server,key=None):
+    def _get_server_metadata(self, server, key=None):
         update = self.conn.compute.get_server_metadata(server)
         if key != None:
-            return update.metadata["key"]
-
+            return update.metadata[key]
         return update.metadata
 
 
