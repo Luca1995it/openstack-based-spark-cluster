@@ -354,7 +354,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master,{"status":"ready","floating_ip":master_floating_ip})
+        self._set_server_metadata(master,{"status":"active","floating_ip":master_floating_ip})
         print("Master set up correctly!")
 
 
@@ -395,7 +395,7 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,"status",value="ready")
+        self._set_server_metadata(slave,"status",value="active")
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
     def _set_server_metadata(self,server,key,value=None):
@@ -424,6 +424,32 @@ class OpenstackDriver:
         resp = requests.get(f"http://{ip}:8080/api/v1/application").content
         soup = bs(resp)
         return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
+
+
+    def _reboot_server(self,server,mode="HARD",commands_on_boot=None):
+        self.conn.compute.reboot_server(server,mode)
+
+        if commands_on_boot != None:
+            self._set_server_metadata(server,key="status",value="rebooting")
+            server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
+            ssh = self._get_ssh_connection(server_floating_ip)
+
+            ssh.exec_command("\n".join(commands_on_boot))
+
+            self._remove_floating_ip_from_instance(server, server_floating_ip)
+            self._set_server_metadata(server,key="status",value="active")
+
+
+    def _stop_server(self,server):
+        self._set_server_metadata(server,"status",value="stopped")
+        self.conn.compute.stop_server(server)
+
+    def _delete_server(self,server):
+        self.conn.compute.delete_server(server)
+
+    def _start_server(self,server):
+        self.conn.compute.start_server(server)
+        self._set_server_metadata(server,"status",value="active")
 
 
     # main function
