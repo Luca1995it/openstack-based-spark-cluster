@@ -97,7 +97,7 @@ class OpenstackDriver:
             'id': instance.id,
             'private_ips': private_ips,
             'public_ips': public_ips,
-            'flavor': create_flavor(flavor)
+            'flavor': OpenstackDriver.create_flavor(flavor)
         }
 
 
