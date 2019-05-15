@@ -165,7 +165,7 @@ class ClusterPage extends Component {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {this.state.master ? <Table.Row>
+                        {this.state.master ? <Table.Row key={this.state.master.id}>
                             <Table.Cell>{this.state.master.name}</Table.Cell>
                             <Table.Cell>{this.state.master.flavor.vcpus}</Table.Cell>
                             <Table.Cell>{`${this.state.master.flavor.ram} MB`}</Table.Cell>
@@ -219,46 +219,45 @@ class ClusterPage extends Component {
                             <Table.HeaderCell>Actions</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
-
-                    {this.state.slaves.map(slave => 
-                        <Table.Row>
-                            <Table.Cell>{slave.name}</Table.Cell>
-                            <Table.Cell>{slave.flavor.vcpus}</Table.Cell>
-                            <Table.Cell>{`${slave.flavor.ram} MB`}</Table.Cell>
-                            <Table.Cell>{`${slave.flavor.disk} GB`}</Table.Cell>
-                            <Table.Cell>{`${slave.flavor.swap} MB`}</Table.Cell>
-                            <Table.Cell>{`${slave.status}`}</Table.Cell>
-                            <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
-                            <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
-                            <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
-                            <Table.Cell>
-                                <Button circular color='green'
-                                    onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status !== 'STOPPED'}
-                                >
-                                    Start
+                    <Table.Body>
+                        {this.state.slaves.map(slave => 
+                            <Table.Row key={slave.id}>
+                                <Table.Cell>{slave.name}</Table.Cell>
+                                <Table.Cell>{slave.flavor.vcpus}</Table.Cell>
+                                <Table.Cell>{`${slave.flavor.ram} MB`}</Table.Cell>
+                                <Table.Cell>{`${slave.flavor.disk} GB`}</Table.Cell>
+                                <Table.Cell>{`${slave.flavor.swap} MB`}</Table.Cell>
+                                <Table.Cell>{`${slave.status}`}</Table.Cell>
+                                <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
+                                <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
+                                <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
+                                <Table.Cell>
+                                    <Button circular color='green'
+                                        onClick={() => this.restart(slave.id)}
+                                        disabled={slave.status !== 'STOPPED'}
+                                    >
+                                        Start
+                                    </Button>
+                                    <Button circular color='yellow'
+                                        onClick={() => this.restart(slave.id)}
+                                        disabled={slave.status !== 'ACTIVE'}
+                                    >
+                                        Restart
+                                    </Button>
+                                    <Button circular color='red'
+                                        onClick={() => this.restart(slave.id)}
+                                        disabled={slave.status !== 'ACTIVE'}
+                                    >
+                                        Shutdown
+                                    </Button>
+                                    <Button circular color='white' inverted
+                                        onClick={() => this.delete(slave.id)}
+                                    >
+                                        Delete
                                 </Button>
-                                <Button circular color='yellow'
-                                    onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status !== 'ACTIVE'}
-                                >
-                                    Restart
-                                </Button>
-                                <Button circular color='red'
-                                    onClick={() => this.restart(slave.id)}
-                                    disabled={slave.status !== 'ACTIVE'}
-                                >
-                                    Shutdown
-                                </Button>
-                                <Button circular color='white' inverted
-                                    onClick={() => this.delete(slave.id)}
-                                >
-                                    Delete
-                            </Button>
-                            </Table.Cell>
-                        </Table.Row>
-                        
-                    )}
+                                </Table.Cell>
+                            </Table.Row>)}
+                        </Table.Body>
                     </Table> : <Header size="tiny">There are no slaves in this cluster</Header>}
             </div>
         </div>
