@@ -141,7 +141,13 @@ class ClusterPage extends Component {
         if (this.state.isLoading) return 
         return <div className='homeContainer'>
             <div className="homeSubContainer">
-                <Header size='medium'>Manage cluster "{this.props.cluster.name}"</Header>
+                <Header size='medium'>
+                    Manage cluster "{this.props.cluster.name}"
+                    {this.state.master && (this.state.master.spark_status === '') && (this.state.master.public_ips.length > 0) ? 
+                        <Link to={`http://${this.state.master.public_ips[0]}:8080`} 
+                            target="_blank" >Spark Master Web UI</Link>
+                     : null}
+                </Header>
                 {this.state.errorMessage ? <Label color="red">{this.state.errorMessage}</Label> : null}
                 <Button circular onClick={this.refresh}>
                     <Icon name='refresh'/>
