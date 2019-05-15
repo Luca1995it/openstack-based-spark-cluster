@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Header, Loader, Divider, Table, Button, Label, Icon, Popup, Segment } from 'semantic-ui-react';
+import { Header, Loader, Divider, Table, Button, Label, Icon, Popup, Segment, Container } from 'semantic-ui-react';
 import './Clusters.css';
 import axios from 'axios';
 import ClusterPageAdd from './ClusterPageAdd';
@@ -218,7 +218,7 @@ class ClusterPage extends Component {
                                 />} />
                                 <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
                                     onClick={() => this.restart_spark(this.state.master.id)}
-                                    disabled={['ALIVE'].includes(this.state.master.spark_status)}
+                                    disabled={['ALIVE'].includes(this.state.master.spark_status) || !this.state.master.status === 'ACTIVE'}
                                 />} />
                                 <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                     onClick={() => this.shutdown(this.state.master.id)}
@@ -275,7 +275,7 @@ class ClusterPage extends Component {
                                             />} />
                                             <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
                                                 onClick={() => this.restart_spark(slave.id)}
-                                                disabled={['ALIVE'].includes(this.state.master.spark_status)}
+                                                disabled={['ALIVE'].includes(this.state.master.spark_status) || !this.state.master.status === 'ACTIVE'}
                                             />} />
                                             <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                                 onClick={() => this.shutdown(slave.id)}
