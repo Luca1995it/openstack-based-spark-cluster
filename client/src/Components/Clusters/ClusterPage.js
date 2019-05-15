@@ -302,7 +302,6 @@ class ClusterPage extends Component {
             </div>
         </div>
     }
-
 }
 
 export default ClusterPage;
