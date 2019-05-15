@@ -50,9 +50,9 @@ def _hashstring(stringa):
     return hashlib.md5(stringa.encode('utf-8')).digest()
 
 
-@app.route('/api/*', method=['OPTIONS'])
+@app.route("/<url:re:.+>", method=['OPTIONS'])
 def process():
-    pass
+    print("Intercepted OPTIONS request")
 
 
 ############################### LOGIN #########################################
