@@ -596,25 +596,25 @@ class OpenstackDriver:
     def _remove_slave(self, cluster, slave_id):
         ips = self._get_fixed_ips_from_instance(slave_id)
         command = [f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in ips]
-        master = self._check_instance(cluster.master_id)
+        master = self._check_instance(cluster['master_id'])
         master_floating_ip = self._get_floating_ips_from_instance(master)[0]
         ssh = self._get_ssh_connection(master_floating_ip)
         ssh.exec_command("\n".join(command))
         self._delete_instance(slave_id)
-        cluster.slaves_ids.remove(slave_id)
+        cluster['slaves_ids'].remove(slave_id)
         return cluster
 
 
     # delete a cluster given a Cluster instance
     def _delete_cluster(self, cluster):
         # first delete the instances
-        for slave_id in cluster.slaves_ids:
+        for slave_id in cluster['slaves_ids']:
             self._delete_instance(slave_id)
-        self._delete_instance(cluster.master_id)
+        self._delete_instance(cluster['master_id'])
         # retrieve instances of nets and routers
-        subnet = self.conn.network.find_subnet(cluster.subnet_id)
-        network = self.conn.network.find_network(cluster.network_id)
-        router = self.conn.network.find_router(cluster.router_id)
+        subnet = self.conn.network.find_subnet(cluster['subnet_id'])
+        network = self.conn.network.find_network(cluster['network_id'])
+        router = self.conn.network.find_router(cluster['router_id'])
         # delete the cluster
         self._delete_cluster_dedicated_network(subnet, network, router)
 
