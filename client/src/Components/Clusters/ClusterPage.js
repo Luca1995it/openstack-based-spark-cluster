@@ -81,7 +81,10 @@ class ClusterPage extends Component {
         }, () => {
                 axios.put(`/api/instance/${id}`, {
                     action: "start"
-                }).then(this.refresh).catch(err => {
+                }).then(res => {
+                    console.log(res);
+                    this.refresh();
+                }).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,
@@ -120,7 +123,10 @@ class ClusterPage extends Component {
         }, () => {
                 axios.put(`/api/instance/${id}`, {
                     action: "shutdown"
-                }).then(this.refresh).catch(err => {
+                }).then(res => {
+                    console.log(res);
+                    this.refresh();
+                }).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,
@@ -231,7 +237,7 @@ class ClusterPage extends Component {
                 <Header size='small'>Slaves</Header>
                 <ClusterPageAdd
                     cluster={this.props.cluster}
-                    refresh={this.refresh} disabled={this.state.slaves.length >= 2}
+                    refresh={this.props.refresh} disabled={this.state.slaves.length >= 2}
                     setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
                 <Divider />
                 {this.state.isLoadingSlaves ? <Loader active inline='centered' /> :

@@ -436,7 +436,7 @@ class OpenstackDriver:
         # wait for all the nodes to be ready
         self._wait_instance(master)
         self._set_server_metadata(master, "status", value="SETTING-UP")
-        
+
         print("Adding floating ip to master")
         # add floating ip to the master
         master_floating_ip = self._add_floating_ip_to_instance(master, self.public_net)
@@ -455,8 +455,9 @@ class OpenstackDriver:
         print("Waiting for slave to be ready")
         # wait for all the nodes to be ready
         self._wait_instance(slave)
+        self._set_server_metadata(slave, "status", value="SETTING-UP")
 
-        print("Adding temporary floating ip to slave")
+        print("Adding floating ip to slave")
         # add floating ip to the slave
         slave_floating_ip = self._add_floating_ip_to_instance(slave, self.public_net)
 
@@ -464,20 +465,14 @@ class OpenstackDriver:
         print("Retrieving master fixed ip")
         master_fixed_ip = self._get_fixed_ip_from_instance_and_network(master, network)
         print("Slave ips: ", slave_floating_ip, master_fixed_ip)
-
+        print("Trying to connect to slave")
         ssh = self._get_ssh_connection(slave_floating_ip)
-        self._set_server_metadata(slave, "status", value="SETTING-UP")
         print("Connected to slave!")
 
         starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
-
-        # launching commands
         ssh.exec_command("\n".join(self.setup_spark_servive_commands_slave(master_fixed_ip, cluster_public_key, starting_memory)))
-
-        print("Revoking floating ip from slave instance")
         self._set_server_metadata(slave,{"status": "ACTIVE", "spark_role": "slave"})
-        self._remove_floating_ip_from_instance(slave, slave_floating_ip)
-
+        print("Adding slave ip to master list")
         slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
         master_floating_ip = self._get_floating_ips_from_instance(master)[0]
 
@@ -530,12 +525,11 @@ class OpenstackDriver:
     ssh a slave instance, stop spark and relaunch it again
     '''
     def _setup_slave_after_reboot(self, slave):
-        slave_floating_ip = self._add_floating_ip_to_instance(slave, self.public_net)
-        ssh = self._get_ssh_connection(slave_floating_ip)
         self._set_server_metadata(slave, key="status", value="SETTING-UP")
+        slave_floating_ip = self._get_floating_ips_from_instance(slave)[0]
+        ssh = self._get_ssh_connection(slave_floating_ip)
         ssh.exec_command("\n".join(self.restore_spark_service_commands_slave))
-        self._remove_floating_ip_from_instance(slave, slave_floating_ip)
-        self._set_server_metadata(slave, key="status", value="ACTIVE") 
+        self._set_server_metadata(slave, key="status", value="ACTIVE")
 
 
     #######################################################
@@ -550,7 +544,7 @@ class OpenstackDriver:
             ip = self._get_floating_ips_from_instance(server)[0]
             resp = requests.get(
                 f"http://{ip}:8080/api/v1/applications").content
-            soup = bs(resp, "html")
+            soup = bs(resp, "html", features="html.parser")
             # extracts the content of the line with the number of running applications
             line = soup.find("span", {"id": "running-app"}).find("a")
             return int(re.search("\d", str(line)).group(0))
@@ -566,7 +560,7 @@ class OpenstackDriver:
             ip = self._get_floating_ips_from_instance(server)[0]
             resp = requests.get(
                 f"http://{ip}:8080/api/v1/applications").content
-            soup = bs(resp, "html")
+            soup = bs(resp, "html", features="html.parser")
             return str(soup.find_all("li")[-1]).replace("</li>", "").split(" ")[-1].upper()
         except:
             return 'DOWN'
@@ -579,6 +573,7 @@ class OpenstackDriver:
     def _get_server_status(self, server):
         # gives all the information correctly
         server = self._check_instance(server)
+        print("Server status:", server.status)
         if server.status in [
             "BUILD",
             "ERROR",
@@ -594,6 +589,7 @@ class OpenstackDriver:
             return server.status
         else:
             res = self._get_server_metadata(server, key="status")
+            print("----", res)
             return res or "UNKNOWN"
 
 
@@ -722,11 +718,12 @@ class OpenstackDriver:
         cluster['slaves_ids'].remove(slave_id)
         # with calm, remove the instance
         def _delete_slave_and_remove_from_master_list(slave, master):
-            self._delete_instance(slave)
             ips = self._get_fixed_ips_from_instance(slave)
-            command = [
-                f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in ips]
-            master = self._check_instance(master)
+            for ip in ips:
+                self._remove_floating_ip_from_instance(slave, ip)
+            self._delete_instance(slave)
+            # remove ips from master list
+            command = [f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in ips]
             master_floating_ip = self._get_floating_ips_from_instance(master)[0]
             ssh = self._get_ssh_connection(master_floating_ip)
             ssh.exec_command("\n".join(command))

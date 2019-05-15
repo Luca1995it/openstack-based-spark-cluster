@@ -66,7 +66,7 @@ export default class ClusterPageAdd extends Component {
                 ...this.state,
                 isLoading: false,
                 modalOpen: false
-            }, () => setTimeout(() => this.props.refresh(), 500));
+            }, this.props.refresh);
         }).catch(err => {
             console.log(err);
             this.props.setErrorMessage("there was a problem adding the node to the cluster, try refreshing the page")
