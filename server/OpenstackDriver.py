@@ -414,7 +414,7 @@ class OpenstackDriver:
     '''
     def _delete_cluster_dedicated_network(self, subnet, network, router):
         # remove all gateways from the router
-        conn.network.update_router(router, external_gateway_info={})
+        self.conn.network.update_router(router, external_gateway_info={})
         # delete all interfaces (ports) associated with this router
         for p in self.conn.network.ports():
             if p.device_id == router.id:
