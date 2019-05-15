@@ -138,7 +138,7 @@ class ClusterPage extends Component {
     }
 
     render(){
-        if (this.state.isLoading) return <Loader active inline='centered' />
+        if (this.state.isLoading) return 
         return <div className='homeContainer'>
             <div className="homeSubContainer">
                 <Header size='medium'>Manage cluster "{this.props.cluster.name}"</Header>
@@ -149,6 +149,7 @@ class ClusterPage extends Component {
                 </Button>
                 <Divider />
                 <Header size='small'>Master</Header>
+                {this.state.isLoadingMaster ? <Loader active inline='centered' /> :
                 <Table celled>
                     <Table.Header>
                         <Table.Row>
@@ -197,68 +198,72 @@ class ClusterPage extends Component {
                             </Table.Cell>
                         </Table.Row> : null}
                     </Table.Body>
-                </Table>
+                </Table>}
                 <Header size='small'>Slaves</Header>
                 <ClusterPageAdd
                     cluster={this.props.cluster}
                     refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/
                     setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
-                {this.state.slaves.length > 0 ?
-                <Table celled>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>Name</Table.HeaderCell>
-                            <Table.HeaderCell>vCPUs</Table.HeaderCell>
-                            <Table.HeaderCell>RAM</Table.HeaderCell>
-                            <Table.HeaderCell>Disk</Table.HeaderCell>
-                            <Table.HeaderCell>Swap</Table.HeaderCell>
-                            <Table.HeaderCell>Status</Table.HeaderCell>
-                            <Table.HeaderCell>Spark Status</Table.HeaderCell>
-                            <Table.HeaderCell>Running jobs</Table.HeaderCell>
-                            <Table.HeaderCell>IP(s)</Table.HeaderCell>
-                            <Table.HeaderCell>Actions</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {this.state.slaves.map(slave => 
-                            <Table.Row key={slave.id}>
-                                <Table.Cell>{slave.name}</Table.Cell>
-                                <Table.Cell>{slave.flavor.vcpus}</Table.Cell>
-                                <Table.Cell>{`${slave.flavor.ram} MB`}</Table.Cell>
-                                <Table.Cell>{`${slave.flavor.disk} GB`}</Table.Cell>
-                                <Table.Cell>{`${slave.flavor.swap} MB`}</Table.Cell>
-                                <Table.Cell>{`${slave.status}`}</Table.Cell>
-                                <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
-                                <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
-                                <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
-                                <Table.Cell>
-                                    <Button circular color='green'
-                                        onClick={() => this.restart(slave.id)}
-                                        disabled={slave.status !== 'STOPPED'}
-                                    >
-                                        Start
-                                    </Button>
-                                    <Button circular color='yellow'
-                                        onClick={() => this.restart(slave.id)}
-                                        disabled={slave.status !== 'ACTIVE'}
-                                    >
-                                        Restart
-                                    </Button>
-                                    <Button circular color='red'
-                                        onClick={() => this.restart(slave.id)}
-                                        disabled={slave.status !== 'ACTIVE'}
-                                    >
-                                        Shutdown
-                                    </Button>
-                                    <Button circular color='white' inverted
-                                        onClick={() => this.delete(slave.id)}
-                                    >
-                                        Delete
-                                </Button>
-                                </Table.Cell>
-                            </Table.Row>)}
-                        </Table.Body>
-                    </Table> : <Header size="tiny">There are no slaves in this cluster</Header>}
+                {this.state.isLoadingSlaves ? <Loader active inline='centered' /> :
+                    <div>
+                        {this.state.slaves.length > 0 ?
+                        <Table celled>
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.HeaderCell>Name</Table.HeaderCell>
+                                    <Table.HeaderCell>vCPUs</Table.HeaderCell>
+                                    <Table.HeaderCell>RAM</Table.HeaderCell>
+                                    <Table.HeaderCell>Disk</Table.HeaderCell>
+                                    <Table.HeaderCell>Swap</Table.HeaderCell>
+                                    <Table.HeaderCell>Status</Table.HeaderCell>
+                                    <Table.HeaderCell>Spark Status</Table.HeaderCell>
+                                    <Table.HeaderCell>Running jobs</Table.HeaderCell>
+                                    <Table.HeaderCell>IP(s)</Table.HeaderCell>
+                                    <Table.HeaderCell>Actions</Table.HeaderCell>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {this.state.slaves.map(slave => 
+                                    <Table.Row key={slave.id}>
+                                        <Table.Cell>{slave.name}</Table.Cell>
+                                        <Table.Cell>{slave.flavor.vcpus}</Table.Cell>
+                                        <Table.Cell>{`${slave.flavor.ram} MB`}</Table.Cell>
+                                        <Table.Cell>{`${slave.flavor.disk} GB`}</Table.Cell>
+                                        <Table.Cell>{`${slave.flavor.swap} MB`}</Table.Cell>
+                                        <Table.Cell>{`${slave.status}`}</Table.Cell>
+                                        <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
+                                        <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
+                                        <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
+                                        <Table.Cell>
+                                            <Button circular color='green'
+                                                onClick={() => this.restart(slave.id)}
+                                                disabled={slave.status !== 'STOPPED'}
+                                            >
+                                                Start
+                                            </Button>
+                                            <Button circular color='yellow'
+                                                onClick={() => this.restart(slave.id)}
+                                                disabled={slave.status !== 'ACTIVE'}
+                                            >
+                                                Restart
+                                            </Button>
+                                            <Button circular color='red'
+                                                onClick={() => this.restart(slave.id)}
+                                                disabled={slave.status !== 'ACTIVE'}
+                                            >
+                                                Shutdown
+                                            </Button>
+                                            <Button circular inverted
+                                                onClick={() => this.delete(slave.id)}
+                                            >
+                                                Delete
+                                        </Button>
+                                        </Table.Cell>
+                                    </Table.Row>)}
+                                </Table.Body>
+                            </Table> : <Header size="tiny">There are no slaves in this cluster</Header>}
+                        </div>
+                }
             </div>
         </div>
     }
