@@ -54,6 +54,8 @@ class OpenstackDriver:
             self._completely_reset_project()
 
         self.restore_spark_service_commands_master = [
+            # stop the master if it was running
+            "/usr/local/spark/sbin/stop-master.sh",
             # stop all slaves
             "/usr/local/spark/sbin/stop-slaves.sh",
             # start the master
