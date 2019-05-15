@@ -7,6 +7,7 @@
 .innerContainer{
     padding: 20px;
     width: stretch !important;
+    width: 75%;
 }
 
 * {
@@ -23,5 +24,5 @@
     display: flex;
     flex-direction: column;
     padding: 20px;
-    width: 100;
+    width: 100%;
 }
