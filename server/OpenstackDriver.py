@@ -517,6 +517,7 @@ class OpenstackDriver:
 
     def _reboot_server(self, server, mode="HARD", commands_on_boot=None):
         server = self._check_instance(server)
+        print("OpenStackDriver rebooting", server.name)
         self.conn.compute.reboot_server(server, mode)
         self._set_server_metadata(server, key="status", value="REBOOTING")
 
