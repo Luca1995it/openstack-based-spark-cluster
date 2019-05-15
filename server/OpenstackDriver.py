@@ -561,10 +561,12 @@ class OpenstackDriver:
     def _get_server_spark_status(self, server):
         try:
             ip = self._get_floating_ips_from_instance(server)[0]
+            port = 8080 if self._get_server_metadata(server,key="spark_role") == "master" else 8081
             resp = requests.get(
-                f"http://{ip}:8080/api/v1/applications").content
-            soup = bs(resp, "html", features="html.parser")
-            return str(soup.find_all("li")[-1]).replace("</li>", "").split(" ")[-1].upper()
+                f"http://{ip}:{port}/api/v1/applications").content
+            #soup = bs(resp, "html", features="html.parser")
+            #return str(soup.find_all("li")[-1]).replace("</li>", "").split(" ")[-1].upper()
+            return 'ACTIVE'
         except:
             return 'DOWN'
 
