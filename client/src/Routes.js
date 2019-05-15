@@ -13,6 +13,7 @@ import axios from 'axios';
 import { Label } from 'semantic-ui-react';
 
 import './Routes.css';
+hljs.initHighlightingOnLoad();
 
 const cookie = new Cookies();
 
