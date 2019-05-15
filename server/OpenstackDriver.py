@@ -659,7 +659,7 @@ class OpenstackDriver:
     '''
     reboot a server. after the reboot, start spark again
     '''
-    def _reboot_server(self, server, mode="HARD", commands_on_boot=None):
+    def _reboot_server(self, server, mode="SOFT"):
         server = self._check_instance(server)
         self.conn.compute.reboot_server(server, mode)
         #self._set_server_metadata(server, key="status", value="REBOOTING")
