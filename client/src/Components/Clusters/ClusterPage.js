@@ -7,7 +7,8 @@ import ClusterPageAdd from './ClusterPageAdd';
 class ClusterPage extends Component {
 
     state = {
-        isLoading: false,
+        isLoadingMaster: false,
+        isLoadingSlaves: false,
         errorMessage: "",
         master: undefined,
         slaves: []
@@ -29,31 +30,44 @@ class ClusterPage extends Component {
     refresh(){
         this.setState({
             ...this.state,
-            isLoading: true,
-        }, () => {
-            let requests = [axios.get(`/api/instance/${this.props.cluster.master_id}`)];
-            let slave_req = this.props.cluster.slaves_ids.map(id => axios.get(`/api/instance/${id}`));
-            console.log(slave_req, typeof (slave_req));
-            requests += slave_req
-            axios.all(requests).then(res => {
-                console.log(res);
-                
-                this.setState({
-                    ...this.state,
-                    master: res[0].data.instance,
-                    slaves: res.slice(1).map(r => r.data.instance),
-                    isLoading: false,
-                    errorMessage: ""
-                });
-            }).catch(err => {
-                console.log(err);
-                this.setState({
-                    ...this.state,
-                    clusters: [],
-                    isLoading: false,
-                    errorMessage: "There was a problem loading the nodes, try refreshing the page"
-                });
-            })
+            isLoadingMaster: true,
+            isLoadingSlaves: true,
+        });
+        axios.get(`/api/instance/${this.props.cluster.master_id}`).then(res => {
+            this.setState({
+                ...this.state,
+                master: res.data.instance,
+                isLoadingMaster: false,
+                errorMessage: ""
+            });
+        }).catch(err => {
+            console.log(err);
+            this.setState({
+                ...this.state,
+                isLoadingMaster: false,
+                errorMessage: "There was a problem loading the master, try refreshing the page"
+            });
+        });
+
+        let requests = this.props.cluster.slaves_ids.map(id => axios.get(`/api/instance/${id}`));
+        console.log(requests, typeof (requests));
+
+        axios.all(requests).then(res => {
+            console.log(res);
+        
+            this.setState({
+                ...this.state,
+                slaves: res.map(r => r.data.instance),
+                isLoadingSlaves: false,
+                errorMessage: ""
+            });
+        }).catch(err => {
+            console.log(err);
+            this.setState({
+                ...this.state,
+                isLoadingSlaves: false,
+                errorMessage: "There was a problem loading the nodes, try refreshing the page"
+            });
         });
     }
 
