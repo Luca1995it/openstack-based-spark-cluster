@@ -20,9 +20,7 @@ export default class ClusterPageAdd extends Component {
     constructor(props) {
         super(props);
         this.addNode = this.addNode.bind(this);
-        this.select = this.select.bind(this);
-        console.log(this.props.cluster);
-        
+        this.select = this.select.bind(this);        
     }
 
     handleOpen = () => {
