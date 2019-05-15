@@ -292,13 +292,13 @@ class ClusterPage extends Component {
                 }
                 <Divider />
                 <Header size='medium'>What to do now ?</Header>
-                <Segment>
-                    If the status of <code>Spark</code> on the Master node is <code>ALIVE</code>, you can use your ssh key to log into the
+                <Segment><Container fluid text className="cluster-description">
+                    If the status of <code>Spark</code> on the Master node is <code>ALIVE</code>, you can use your ssh key to log into the 
                     <code>Master</code> instance and launch your
                     <code>Spark</code> jobs. You can see the state of Jobs and of <code>Spark</code> clicking the link that 
                     will appear in the <code>Master</code> section. At the moment, only
                     script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.
-                </Segment>
+                </Container></Segment>
             </div>
         </div>
     }
