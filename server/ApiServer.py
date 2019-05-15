@@ -353,7 +353,6 @@ def process(id):
     if action == 'start':
         openstackdriver._start_server(id)
     elif action == 'restart':
-        print("Restarting..")
         openstackdriver._reboot_server(id)
     else:
         openstackdriver._stop_server(id)

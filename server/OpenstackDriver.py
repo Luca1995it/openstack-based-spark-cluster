@@ -553,13 +553,12 @@ class OpenstackDriver:
         else: 
             print(f"No role declared for instance: {server.name} {server.id}")
 
-    def _stop_server(self,server_id):
-        self._set_server_metadata(server_id, "status", value="STOPPED")
+
+    def _stop_server(self, server_id):
         self.conn.compute.stop_server(server_id)
 
     def _start_server(self, server_id):
         self.conn.compute.start_server(server_id)
-        self._set_server_metadata(server_id, "status", value="ACTIVE")
 
 
     # main function
@@ -574,21 +573,17 @@ class OpenstackDriver:
         print("Create keypair")
         # create the keypair to allow the master access the slaves
         cluster_private_key, cluster_public_key = self._create_ssh_pair()
-        
         print("Create network and router")
         # create the network for the cluster
         subnet, network, router = self._create_cluster_dedicated_network(name)
         print(network, router)
-
         print("Creating master...")
         # launch the master
         master = self._create_instance(f'{name}_master', flavor_name='master-spark-node', network_name=network.name)
         print(master)
-        
         print("Starting thread")
         # instances launched, configuring them in an other thread to return asap the results to the client
         threading.Thread(target=self._setup_master, args=(master, network, user_ssh_key, cluster_private_key)).start()
-        
         # return the Cluster object
         return OpenstackDriver.create_cluster(name, master.id, subnet.id, network.id, router.id, [], cluster_private_key, cluster_public_key)
 
@@ -597,7 +592,7 @@ class OpenstackDriver:
     def _add_slave(self, cluster, flavor_name='small-spark-node'):
         print("Create slave", flavor_name)
         # retrieve the master
-        master = self.conn.compute.find_server(cluster["master_id"])
+        master = self._check_instance(cluster["master_id"])
         network = self.conn.network.find_network(cluster["network_id"])
         slave_name = f'{cluster["name"]}_slave{len(cluster["slaves_ids"])}'
         # create the slave
@@ -610,17 +605,21 @@ class OpenstackDriver:
         return cluster
 
 
-
-    # destroy a slave node from the cluster
-    def _remove_slave(self, cluster, slave_id):
-        ips = self._get_fixed_ips_from_instance(slave_id)
+    def _delete_slave_and_remove_from_master_list(self, slave, master):
+        self._delete_instance(slave)
+        ips = self._get_fixed_ips_from_instance(slave)
         command = [f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in ips]
-        master = self._check_instance(cluster['master_id'])
+        master = self._check_instance(master)
         master_floating_ip = self._get_floating_ips_from_instance(master)[0]
         ssh = self._get_ssh_connection(master_floating_ip)
         ssh.exec_command("\n".join(command))
-        self._delete_instance(slave_id)
+
+
+    # destroy a slave node from the cluster
+    def _remove_slave(self, cluster, slave_id):
         cluster['slaves_ids'].remove(slave_id)
+        # with calm, remove the instance    
+        threading.Thread(target=self._delete_slave_and_remove_from_master_list, args=(slave_id, cluster['master_id'])).start()
         return cluster
 
 
