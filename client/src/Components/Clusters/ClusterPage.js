@@ -28,8 +28,9 @@ class ClusterPage extends Component {
         this.refresh();
     }
 
-    componentDidUpdate(){
-        this.refresh();
+    componentDidUpdate(oldProps){
+        const newProps = this.props;
+        if(oldProps.cluster.slaves_ids.length !== newProps.cluster.slaves_ids.length) this.refresh();
     }
 
     refresh(){
