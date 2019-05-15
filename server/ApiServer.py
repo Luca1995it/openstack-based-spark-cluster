@@ -363,6 +363,7 @@ def process(id):
 @app.route('/api/instance/<id>', method=['DELETE'])
 @require_api_token
 def process(id):
+    print("DELETE instance body: ", request.body)
     try:
         parameters = json.load(request.body)
     except json.decoder.JSONDecodeError as error:
