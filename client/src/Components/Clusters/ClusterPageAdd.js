@@ -88,7 +88,7 @@ export default class ClusterPageAdd extends Component {
     render() {
         return (
             <Modal
-                trigger={<Button size='small' floated='right' onClick={this.handleOpen} className="topBtns newDocument"><Icon name='add' />Create a new node</Button>}
+                trigger={<Button size='small' floated='right' disabled={this.props.disabled} onClick={this.handleOpen} className="topBtns newDocument"><Icon name='add' />Create a new node</Button>}
                 open={this.state.modalOpen}
                 onClose={this.handleClose}
             >

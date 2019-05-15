@@ -202,8 +202,9 @@ class ClusterPage extends Component {
                 <Header size='small'>Slaves</Header>
                 <ClusterPageAdd
                     cluster={this.props.cluster}
-                    refresh={this.refresh} /*disabled={this.state.clusters.length >= 2}*/
+                    refresh={this.refresh} disabled={this.state.clusters.length >= 2}
                     setErrorMessage={(msg) => this.setState({ ...this.state, errorMessage: msg })} />
+                <Divider />
                 {this.state.isLoadingSlaves ? <Loader active inline='centered' /> :
                     <div>
                         {this.state.slaves.length > 0 ?
