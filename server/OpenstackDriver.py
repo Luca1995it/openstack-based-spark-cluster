@@ -491,7 +491,7 @@ class OpenstackDriver:
             ip = self._get_floating_ips_from_instance(server)[0]
             resp = requests.get(f"http://{ip}:8080/api/v1/applications").content
             soup = bs(resp,"html")
-            return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].lower()
+            return str(soup.find_all("li")[-1]).replace("</li>","").split(" ")[-1].upper()
         except:
             return 'DOWN'
 

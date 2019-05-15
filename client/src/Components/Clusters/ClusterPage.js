@@ -144,7 +144,7 @@ class ClusterPage extends Component {
             <div className="homeSubContainer">
                 <Header size='medium'>
                     Manage cluster "{this.props.cluster.name}"
-                    {this.state.master && (this.state.master.spark_status === '') && (this.state.master.public_ips.length > 0) ? 
+                    {this.state.master && (this.state.master.spark_status === 'ALIVE') && (this.state.master.public_ips.length > 0) ? 
                         <Link to={`http://${this.state.master.public_ips[0]}:8080`} 
                             target="_blank" >Spark Master Web UI</Link>
                      : null}
