@@ -20,6 +20,7 @@ class ClusterPage extends Component {
         this.refresh = this.refresh.bind(this);
         this.start = this.start.bind(this);
         this.restart = this.restart.bind(this);
+        this.restart_spark = this.restart_spark.bind(this);
         this.shutdown = this.shutdown.bind(this);
         this.delete = this.delete.bind(this);
     }
