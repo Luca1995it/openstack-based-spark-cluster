@@ -122,7 +122,7 @@ export default class Navbar extends Component {
 					<br />
                     <List link inverted>
                         <List.Item >Apache Spark Cluster Manager</List.Item>
-                        <List.Item >Based on OpenStack framework</List.Item>
+                        <List.Item >Based on <code>OpenStack</code> framework and openstacksdk <code>Python</code> v2 APIs</List.Item>
                     </List>
 					<br />
                     <List link inverted>
