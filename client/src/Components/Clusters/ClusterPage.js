@@ -171,9 +171,9 @@ class ClusterPage extends Component {
                             <Table.HeaderCell rowSpan='1'>Swap</Table.HeaderCell>
                             <Table.HeaderCell rowSpan='2'>Status</Table.HeaderCell>
                             <Table.HeaderCell rowSpan='2'>Spark Status</Table.HeaderCell>
-                            <Table.HeaderCell rowSpan='2'>Running jobs</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Running jobs</Table.HeaderCell>
                             <Table.HeaderCell rowSpan='2'>IP(s)</Table.HeaderCell>
-                            <Table.HeaderCell rowSpan='2'>Actions</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='3'>Actions</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -223,9 +223,9 @@ class ClusterPage extends Component {
                                     <Table.HeaderCell rowSpan='1'>Swap</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='2'>Status</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='2'>Spark Status</Table.HeaderCell>
-                                    <Table.HeaderCell rowSpan='2'>Running jobs</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='1'>Running jobs</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='2'>IP(s)</Table.HeaderCell>
-                                    <Table.HeaderCell rowSpan='2'>Actions</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='3'>Actions</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
