@@ -117,7 +117,7 @@ class OpenstackDriver:
         if isinstance(instance, str):
             return self.conn.compute.find_server(instance)
         else:
-            return self.conn.compute.find_server(instance.id)
+            return instance
 
     def _init_flavors(self):
         # delete useless flavors
@@ -496,8 +496,8 @@ class OpenstackDriver:
             return 'DOWN'
 
     def _get_server_status(self, server):
-        s = self.conn.compute.find_server(server.id) #gives all the information correctly
-        if s.status in [
+        server = self._check_instance(server) #gives all the information correctly
+        if server.status in [
             "BUILD", 
             "ERROR", 
             "HARD_REBOOT", 
@@ -509,9 +509,9 @@ class OpenstackDriver:
             "STOPPED",
             "SUSPENDED"
         ]:
-            return s.status
+            return server.status
         else:
-            res = self._get_server_metadata(s, key="status")
+            res = self._get_server_metadata(server, key="status")
             return res or "UNKNOWN"
 
 
