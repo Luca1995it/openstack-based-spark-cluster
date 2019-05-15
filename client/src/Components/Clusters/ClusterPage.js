@@ -1,5 +1,6 @@
-import React, { Component } from 'react'
-import { Header, Loader, Divider, Table, Button, Label, Icon } from 'semantic-ui-react'
+import React, { Component } from 'react';
+import { Header, Loader, Divider, Table, Button, Label, Icon } from 'semantic-ui-react';
+import { Link } from 'react-router-dom';
 import './Clusters.css';
 import axios from 'axios';
 import ClusterPageAdd from './ClusterPageAdd';
