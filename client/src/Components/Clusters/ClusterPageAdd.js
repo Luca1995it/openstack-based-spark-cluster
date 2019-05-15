@@ -58,7 +58,10 @@ export default class ClusterPageAdd extends Component {
         this.setState({
             ...this.state,
             isLoading: true,
-        }, () => axios.post(`/api/instance/${this.props.cluster.id}`, this.state.instance).then(res => {
+        }, () => axios.post(`/api/instance`, {
+                ...this.state.instance,
+                cluster_id: this.props.cluster.id
+            }).then(res => {
             this.setState({
                 ...this.state,
                 isLoading: false,
