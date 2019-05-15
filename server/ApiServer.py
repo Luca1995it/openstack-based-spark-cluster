@@ -52,7 +52,7 @@ def _hashstring(stringa):
 
 @app.route("/<url:re:.+>", method=['OPTIONS'])
 def process():
-    print("Intercepted OPTIONS request")
+    pass
 
 
 ############################### LOGIN #########################################
@@ -94,7 +94,7 @@ def process():
 
 
 ############################### REGISTRATION ##################################
-@app.route('/api/register', method=['OPTIONS', 'POST'])
+@app.route('/api/register', method=['POST'])
 def process():
     try:
         parameters = json.load(request.body)
@@ -155,7 +155,7 @@ def require_api_token(func):
 
 ########################## SSH PAIRS ##########################################
 # Get list of ssh keys of the current user
-@app.route('/api/sshpair', method=['OPTIONS', 'GET'])
+@app.route('/api/sshpair', method=['GET'])
 @require_api_token
 def process():
     token = request.get_header('X-CSRF-Token')
@@ -167,7 +167,7 @@ def process():
     }
 
 # Insert a new key for the current user
-@app.route('/api/sshpair', method=['OPTIONS', 'POST'])
+@app.route('/api/sshpair', method=['POST'])
 @require_api_token
 def process():
     token = request.get_header('X-CSRF-Token')
@@ -189,7 +189,7 @@ def process():
     return "ok"
 
 # Delete a key for the current user
-@app.route('/api/sshpair/<id>', method=['OPTIONS', 'DELETE'])
+@app.route('/api/sshpair/<id>', method=['DELETE'])
 @require_api_token
 def process(id):
     token = request.get_header('X-CSRF-Token')
@@ -207,7 +207,7 @@ def process(id):
 
 ############################### FLAVORS #######################################
 # Get list of flavor
-@app.route('/api/flavor', method=['OPTIONS', 'GET'])
+@app.route('/api/flavor', method=['GET'])
 @require_api_token
 def process():
     return {
@@ -217,7 +217,7 @@ def process():
 
 ############################### CLUSTERS ######################################
 # Get single / list of clusters of the user with actual token
-@app.route('/api/cluster/<id>', method=['OPTIONS', 'GET'])
+@app.route('/api/cluster/<id>', method=['GET'])
 @require_api_token
 def process(id):
     token = request.get_header('X-CSRF-Token')
@@ -230,7 +230,7 @@ def process(id):
     }
 
 # get list of all clusters (simplified entries not to overload openstack)
-@app.route('/api/cluster', method=['OPTIONS', 'GET'])
+@app.route('/api/cluster', method=['GET'])
 @require_api_token
 def process():
     token = request.get_header('X-CSRF-Token')
@@ -247,7 +247,7 @@ def process():
 
 # TODO: Cluster names collision!!!
 # Create a new cluster with the given parameters
-@app.route('/api/cluster', method=['OPTIONS', 'POST'])
+@app.route('/api/cluster', method=['POST'])
 @require_api_token
 def process():
     try:
@@ -275,7 +275,7 @@ def process():
     return "OK"
 
 # Delete a cluster given the id
-@app.route('/api/cluster/<id>', method=['OPTIONS', 'DELETE'])
+@app.route('/api/cluster/<id>', method=['DELETE'])
 @require_api_token
 def process(id):
     token = request.get_header('X-CSRF-Token')
@@ -291,7 +291,7 @@ def process(id):
 
 
 ############################### INSTANCE ######################################
-@app.route('/api/instance/<action>/<id>', method=['OPTIONS', 'PUT'])
+@app.route('/api/instance/<action>/<id>', method=['PUT'])
 @require_api_token
 def process(action, id):
     try:
@@ -321,7 +321,7 @@ def process(action, id):
     return "OK"
 
 
-@app.route('/api/instance/<cluster_id>/<id>', method=['OPTIONS', 'DELETE'])
+@app.route('/api/instance/<cluster_id>/<id>', method=['DELETE'])
 @require_api_token
 def process(cluster_id, id):
     try:
@@ -351,7 +351,7 @@ def process(cluster_id, id):
 
 
 # Get a single instance of the user with actual token
-@app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
+@app.route('/api/instance/<id>', method=['GET'])
 @require_api_token
 def process(id):
     res =  openstackdriver._get_instance_info(id)
@@ -360,7 +360,7 @@ def process(id):
     }
     
 
-@app.route('/api/instance/<cluster_id>', method=['OPTIONS', 'POST'])
+@app.route('/api/instance/<cluster_id>', method=['POST'])
 @require_api_token
 def process(cluster_id):
     try:
