@@ -12,3 +12,16 @@
 * {
     font-size: 16px;
 }
+
+.homeContainer {
+    display: flex;
+    flex-direction: row;
+    width: stretch;
+}
+
+.homeSubContainer{
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    width: 100;
+}

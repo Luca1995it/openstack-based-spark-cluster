@@ -1,22 +1,3 @@
-.homeContainer {
-    display: flex;
-    flex-direction: row;
-    width: stretch;
-}
-
-.homeSubContainer{
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-}
-
-.leftContainer {
-    width: 70%;
-}
-
-.rightContainer{
-    width: 30%;
-}
 
 .homeAdvices {
     margin-top: 20px;
