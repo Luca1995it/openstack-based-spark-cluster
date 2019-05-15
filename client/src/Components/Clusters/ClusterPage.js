@@ -25,7 +25,11 @@ class ClusterPage extends Component {
     }
 
     componentDidMount(){
-        this.refresh()
+        this.refresh();
+    }
+
+    componentDidUpdate(){
+        this.refresh();
     }
 
     refresh(){
@@ -138,7 +142,7 @@ class ClusterPage extends Component {
                     }
                 }).then(res => {
                 console.log(res);
-                this.refresh();
+                this.props.refresh();
             }).catch(err => {
                 console.log(err);
                 this.setState({

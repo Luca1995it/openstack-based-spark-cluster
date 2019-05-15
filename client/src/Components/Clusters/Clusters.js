@@ -68,10 +68,10 @@ class Clusters extends Component {
         });
     }
 
-    edit(cluster){
+    edit(cluster_id){
         this.setState({
             ...this.state,
-            status: cluster
+            status: cluster_id
         });
     }
 
@@ -79,12 +79,12 @@ class Clusters extends Component {
         this.setState({
             ...this.state,
             status: undefined
-        }, this.refresh);
+        });
     }
 
     render() {
         if (this.state.isLoading) return <Loader active inline='centered' />
-        if (this.state.status) return <ClusterPage back={this.back} cluster={this.state.status} />
+        if (this.state.status) return <ClusterPage update={this.refresh} back={this.back} cluster={this.state.clusters[this.state.status]} />
         return (
             <div className='homeContainer'>
                 <div className="homeSubContainer">
@@ -119,7 +119,7 @@ class Clusters extends Component {
                                             {clus.slaves_ids.length}
                                         </Table.Cell>
                                         <Table.Cell>
-                                            <Button icon='edit' onClick={() => this.edit(clus)} circular />
+                                            <Button icon='edit' onClick={() => this.edit(clus.id)} circular />
                                             <Button icon='delete' onClick={() => this.delete(clus.id)} circular />
                                         </Table.Cell>
                                     </Table.Row>)}
