@@ -11,7 +11,7 @@ import requests
 DEFAULT_PROJECT = 'apache-spark-cluster-manager'
 DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
-MAX_TRIES = 100
+MAX_TRIES = 30
 RESERVED_RAM = 256 # RAM to reserve for the OS in MB
 
 
@@ -83,7 +83,7 @@ class OpenstackDriver:
             f'cd ~/.ssh && echo "{user_ssh_key}" >> authorized_keys',
             f'/usr/local/spark/sbin/start-master.sh'
         ]
-        self.setup_spark_servive_commands_slave = lambda master_fixed_ip, cluster_public_key, starting_memory: [
+        self.setup_spark_service_commands_slave = lambda master_fixed_ip, cluster_public_key, starting_memory: [
             # reset /etc/hosts file
             f'sudo rm /etc/hosts',
             f'echo -e "127.0.0.1\tlocalhost.localdomain localhost $(hostname)\n{master_fixed_ip}\tmaster" | sudo tee -a /etc/hosts',
@@ -475,7 +475,7 @@ class OpenstackDriver:
         print("Connected to slave!")
 
         starting_memory = int(self.conn.compute.find_flavor(slave.flavor['id']).ram) - RESERVED_RAM
-        ssh.exec_command("\n".join(self.setup_spark_servive_commands_slave(master_fixed_ip, cluster_public_key, starting_memory)))
+        ssh.exec_command("\n".join(self.setup_spark_service_commands_slave(master_fixed_ip, cluster_public_key, starting_memory)))
         self._set_server_metadata(slave,{"status": "ACTIVE", "spark_role": "slave"})
         print("Adding slave ip to master list")
         slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
