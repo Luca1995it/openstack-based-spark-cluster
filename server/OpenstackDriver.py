@@ -638,7 +638,7 @@ class OpenstackDriver:
         def then(server):
             self._wait_instance(server)  # wait to be newly on
             self._restart_spark(server)
-        threading.Thread(target=then, args=(server)).start()
+        threading.Thread(target=then, args=(server,)).start()
 
     '''
     restart spark on an instance. if it is master
@@ -650,10 +650,10 @@ class OpenstackDriver:
         sr = meta["spark_role"]
         if sr == "master":
             threading.Thread(
-                target=self._setup_master_after_reboot, args=(server)).start()
+                target=self._setup_master_after_reboot, args=(server,)).start()
         elif sr == "slave":
             threading.Thread(
-                target=self._setup_slave_after_reboot, args=(server)).start()
+                target=self._setup_slave_after_reboot, args=(server,)).start()
 
 
     '''
@@ -666,7 +666,7 @@ class OpenstackDriver:
         def then(server):
             self._wait_instance(server)  # wait to be newly on
             self._restart_spark(server)
-        threading.Thread(target=then, args=(server)).start()
+        threading.Thread(target=then, args=(server,)).start()
 
     '''
     definitely remove an instance
@@ -784,7 +784,7 @@ class OpenstackDriver:
             router = self.conn.network.find_router(cluster['router_id'])
             # delete the cluster
             self._delete_cluster_dedicated_network(subnet, network, router)
-        threading.Thread(target=then, args=(cluster)).start()
+        threading.Thread(target=then, args=(cluster,)).start()
 
 
 
