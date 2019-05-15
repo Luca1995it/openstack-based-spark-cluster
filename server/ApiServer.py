@@ -362,7 +362,7 @@ def process(id):
 
 @app.route('/api/instance/<id>', method=['DELETE'])
 @require_api_token
-def process(cluster_id, id):
+def process(id):
     try:
         parameters = json.load(request.body)
     except json.decoder.JSONDecodeError as error:
@@ -380,7 +380,7 @@ def process(cluster_id, id):
             'status': "MISSING_PARAMS",
             'message': 'id or cluster_id missing'
         }
-
+    cluster_id = parameters['cluster_id']
     result = db.clusters.find_one(
         {'user_id': user['_id'], '_id': ObjectId(cluster_id)})
     cluster = result['cluster']
