@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Header, Loader, Divider, Table, Button, Label, Icon } from 'semantic-ui-react';
+import { Header, Loader, Divider, Table, Button, Label, Icon, Popup } from 'semantic-ui-react';
 import './Clusters.css';
 import axios from 'axios';
 import ClusterPageAdd from './ClusterPageAdd';
@@ -188,24 +188,18 @@ class ClusterPage extends Component {
                             <Table.Cell>{`${this.state.master.number_running_app}`}</Table.Cell>
                             <Table.Cell>{`[${this.state.master.public_ips.join(", ")}]`}</Table.Cell>
                             <Table.Cell>
-                                <Button circular color='green'
-                                    onClick={() => this.restart(this.state.master.id)}
+                                <Popup content='Start' trigger={<Button circular icon='angle up' color='green'
+                                    onClick={() => this.start(this.state.master.id)}
                                     disabled={this.state.master.status !== 'STOPPED'}
-                                >
-                                    Start
-                                </Button>
-                                <Button circular color='yellow'
+                                />} />
+                                <Popup content='Restart' trigger={<Button circular icon='redo' color='yellow'
                                     onClick={() => this.restart(this.state.master.id)}
                                     disabled={this.state.master.status !== 'ACTIVE'}
-                                >
-                                    Restart
-                                </Button>
-                                <Button circular color='red'
-                                    onClick={() => this.restart(this.state.master.id)}
+                                />} />
+                                <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
+                                    onClick={() => this.shutdown(this.state.master.id)}
                                     disabled={this.state.master.status !== 'ACTIVE'}
-                                >
-                                    Shutdown
-                                </Button>
+                                />} />
                             </Table.Cell>
                         </Table.Row> : null}
                     </Table.Body>
@@ -247,29 +241,21 @@ class ClusterPage extends Component {
                                         <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
                                         <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
                                         <Table.Cell>
-                                            <Button circular color='green'
-                                                onClick={() => this.restart(slave.id)}
+                                            <Popup content='Start' trigger={<Button circular icon='angle up' color='green'
+                                                onClick={() => this.start(slave.id)}
                                                 disabled={slave.status !== 'STOPPED'}
-                                            >
-                                                Start
-                                            </Button>
-                                            <Button circular color='yellow'
+                                            />} />
+                                            <Popup content='Restart' trigger={<Button circular icon='redo' color='yellow'
                                                 onClick={() => this.restart(slave.id)}
                                                 disabled={slave.status !== 'ACTIVE'}
-                                            >
-                                                Restart
-                                            </Button>
-                                            <Button circular color='red'
-                                                onClick={() => this.restart(slave.id)}
+                                            />} />
+                                            <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
+                                                onClick={() => this.shutdown(slave.id)}
                                                 disabled={slave.status !== 'ACTIVE'}
-                                            >
-                                                Shutdown
-                                            </Button>
-                                            <Button circular inverted
+                                            />} />
+                                            <Popup content='Delete' trigger={<Button circular icon='close' inverted
                                                 onClick={() => this.delete(slave.id)}
-                                            >
-                                                Delete
-                                        </Button>
+                                            />} />
                                         </Table.Cell>
                                     </Table.Row>)}
                                 </Table.Body>
