@@ -284,7 +284,7 @@ class OpenstackDriver:
                 print("Instance not yet ready:", e)
                 tries += 1
             sleep(5)
-        return None
+        raise Exception("Failed to connect to given host: %s" % host)
 
 
     #######################################################
