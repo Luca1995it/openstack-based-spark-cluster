@@ -670,6 +670,7 @@ class OpenstackDriver:
     def _reboot_server(self, server, mode="SOFT"):
         server = self._check_instance(server)
         self.conn.compute.reboot_server(server, mode)
+        self._wait_instance(server, status='REBOOT')
         #self._set_server_metadata(server, key="status", value="REBOOTING")
         def then(server):
             self._wait_instance(server)  # wait to be newly on
@@ -701,8 +702,9 @@ class OpenstackDriver:
     '''
     wait an instance to become "ACTIVE"
     '''
-    def _wait_instance(self, instance):
-        self.conn.compute.wait_for_server(instance, wait=240)
+
+    def _wait_instance(self, instance, status='ACTIVE'):
+        self.conn.compute.wait_for_server(instance, status=status, wait=240)
 
     ################### SLAVES ############################
     '''
