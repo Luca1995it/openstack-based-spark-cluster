@@ -12,7 +12,7 @@ DEFAULT_PROJECT = 'apache-spark-cluster-manager'
 DEFAULT_CLOUD = 'apache-spark-cluster-manager-cloud'
 DEFAULT_GROUPNAME = 'apache-spark-cluster-manager-group'
 MAX_TRIES = 30
-RESERVED_RAM = 256 # RAM to reserve for the OS in MB
+RESERVED_RAM = 128 # RAM to reserve for the OS in MB (not counting swap space)
 
 
 class NetAddr:
@@ -165,9 +165,9 @@ class OpenstackDriver:
         self.conn.compute.create_flavor(
             name='small-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
         self.conn.compute.create_flavor(
-            name='medium-spark-node', ram=1536, vcpus=2, disk=8, swap=4096)
+            name='medium-spark-node', ram=2048, vcpus=2, disk=8, swap=4096)
         self.conn.compute.create_flavor(
-            name='master-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
+            name='master-spark-node', ram=1536, vcpus=1, disk=8, swap=4096)
 
     '''
     delete and re-create the default group
