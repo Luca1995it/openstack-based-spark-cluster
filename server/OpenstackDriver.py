@@ -163,11 +163,11 @@ class OpenstackDriver:
             self.conn.compute.delete_flavor(f.id, ignore_missing=True)
         # create the new ones
         self.conn.compute.create_flavor(
-            name='small-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
+            name='small-spark-node', ram=1536, vcpus=1, disk=8, swap=4096)
         self.conn.compute.create_flavor(
             name='medium-spark-node', ram=2048, vcpus=2, disk=8, swap=4096)
         self.conn.compute.create_flavor(
-            name='master-spark-node', ram=1536, vcpus=1, disk=8, swap=4096)
+            name='master-spark-node', ram=1024, vcpus=1, disk=8, swap=4096)
 
     '''
     delete and re-create the default group
@@ -415,13 +415,19 @@ class OpenstackDriver:
     delete all routers, networks and subnetwors associated with a cluster
     '''
     def _delete_cluster_dedicated_network(self, subnet, network, router):
-        # remove all gateways from the router
-        self.conn.network.update_router(router, external_gateway_info={})
-        # delete all interfaces (ports) associated with this router
-        for p in self.conn.network.ports():
-            if p.device_id == router.id:
-                if p.device_owner == 'network:router_interface':
-                    self.conn.network.remove_interface_from_router(router, port_id=p.id)
+        # remove all gateways from the router (may fail if router is not yet ready)
+        try:
+            self.conn.network.update_router(router, external_gateway_info={})
+        except Exception as e:
+            print(e)
+        try:
+            # delete all interfaces (ports) associated with this router
+            for p in self.conn.network.ports():
+                if p.device_id == router.id:
+                    if p.device_owner == 'network:router_interface':
+                        self.conn.network.remove_interface_from_router(router, port_id=p.id)
+        except Exception as e:
+            print(e)
 
         # delete router
         self.conn.network.delete_router(router)
