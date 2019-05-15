@@ -164,16 +164,16 @@ class ClusterPage extends Component {
                 <Table celled>
                     <Table.Header>
                         <Table.Row>
-                            <Table.HeaderCell>Name</Table.HeaderCell>
-                            <Table.HeaderCell>vCPUs</Table.HeaderCell>
-                            <Table.HeaderCell>RAM</Table.HeaderCell>
-                            <Table.HeaderCell>Disk</Table.HeaderCell>
-                            <Table.HeaderCell>Swap</Table.HeaderCell>
-                            <Table.HeaderCell>Status</Table.HeaderCell>
-                            <Table.HeaderCell>Spark Status</Table.HeaderCell>
-                            <Table.HeaderCell>Running jobs</Table.HeaderCell>
-                            <Table.HeaderCell>IP(s)</Table.HeaderCell>
-                            <Table.HeaderCell>Actions</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='2'>Name</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>vCPUs</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>RAM</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Disk</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='1'>Swap</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='2'>Status</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='2'>Spark Status</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='2'>Running jobs</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='2'>IP(s)</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='2'>Actions</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -216,16 +216,16 @@ class ClusterPage extends Component {
                         <Table celled>
                             <Table.Header>
                                 <Table.Row>
-                                    <Table.HeaderCell>Name</Table.HeaderCell>
-                                    <Table.HeaderCell>vCPUs</Table.HeaderCell>
-                                    <Table.HeaderCell>RAM</Table.HeaderCell>
-                                    <Table.HeaderCell>Disk</Table.HeaderCell>
-                                    <Table.HeaderCell>Swap</Table.HeaderCell>
-                                    <Table.HeaderCell>Status</Table.HeaderCell>
-                                    <Table.HeaderCell>Spark Status</Table.HeaderCell>
-                                    <Table.HeaderCell>Running jobs</Table.HeaderCell>
-                                    <Table.HeaderCell>IP(s)</Table.HeaderCell>
-                                    <Table.HeaderCell>Actions</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='2'>Name</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='1'>vCPUs</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='1'>RAM</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='1'>Disk</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='1'>Swap</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='2'>Status</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='2'>Spark Status</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='2'>Running jobs</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='2'>IP(s)</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='2'>Actions</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
