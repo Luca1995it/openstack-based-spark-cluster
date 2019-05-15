@@ -202,7 +202,7 @@ class ClusterPage extends Component {
                 <Header size='small'>
                     Master 
                     <br/>
-                    {this.state.master && (this.state.master.spark_status === 'ALIVE') && (this.state.master.public_ips.length > 0) ?
+                    {this.state.master && (this.state.master.spark_status === 'ACTIVE') && (this.state.master.public_ips.length > 0) ?
                         <a href={`http://${this.state.master.public_ips[0]}:8080`}
                             target="_blank" rel="noopener noreferrer">Spark Master Web UI</a>
                     : null}
