@@ -124,7 +124,7 @@ class ClusterPage extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.delete(`/api/instance/${id}`).then(this.refresh).catch(err => {
+            axios.delete(`/api/instance/${this.props.cluster.id}/${id}`).then(this.refresh).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,

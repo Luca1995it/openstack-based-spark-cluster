@@ -50,9 +50,13 @@ def _hashstring(stringa):
     return hashlib.md5(stringa.encode('utf-8')).digest()
 
 
+@app.route('/api/*', method=['OPTIONS'])
+def process():
+    pass
+
 
 ############################### LOGIN #########################################
-@app.route('/api/login', method=['OPTIONS', 'POST'])
+@app.route('/api/login', method=['POST'])
 def process():
     try:
         parameters = json.load(request.body)
@@ -287,44 +291,6 @@ def process(id):
 
 
 ############################### INSTANCE ######################################
-# Get a single instance of the user with actual token
-@app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
-@require_api_token
-def process(id):
-    res =  openstackdriver._get_instance_info(id)
-    return {
-        'instance': res
-    }
-    
-
-@app.route('/api/instance/<cluster_id>', method=['OPTIONS', 'POST'])
-@require_api_token
-def process(cluster_id):
-    try:
-        parameters = json.load(request.body)
-    except json.decoder.JSONDecodeError as error:
-        return {
-            'status': "MALFORMED_JSON",
-            'message': "Malformed JSON body in request"
-        }
-    token = request.get_header('X-CSRF-Token')
-    user = db.users.find_one({'token': token})
-
-    if 'flavor_name' not in parameters or 'quantity' not in parameters or cluster_id is None:
-        return {
-            'status': "MISSING_PARAMS",
-            'message': 'flavor_name or quantity or cluster_id missing'
-        }
-    
-    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)})
-    cluster = result['cluster']
-    for i in range(parameters['quantity']):
-        cluster = openstackdriver._add_slave(cluster, flavor_name=parameters['flavor_name'])
-    db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)},
-                           {'$set': {'cluster': cluster}})
-    return "OK"
-
-
 @app.route('/api/instance/<action>/<id>', method=['OPTIONS', 'PUT'])
 @require_api_token
 def process(action, id):
@@ -382,6 +348,45 @@ def process(cluster_id, id):
     db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)},
                            {'$set': {'cluster': cluster}})
     return "OK"
+
+
+# Get a single instance of the user with actual token
+@app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
+@require_api_token
+def process(id):
+    res =  openstackdriver._get_instance_info(id)
+    return {
+        'instance': res
+    }
+    
+
+@app.route('/api/instance/<cluster_id>', method=['OPTIONS', 'POST'])
+@require_api_token
+def process(cluster_id):
+    try:
+        parameters = json.load(request.body)
+    except json.decoder.JSONDecodeError as error:
+        return {
+            'status': "MALFORMED_JSON",
+            'message': "Malformed JSON body in request"
+        }
+    token = request.get_header('X-CSRF-Token')
+    user = db.users.find_one({'token': token})
+
+    if 'flavor_name' not in parameters or 'quantity' not in parameters or cluster_id is None:
+        return {
+            'status': "MISSING_PARAMS",
+            'message': 'flavor_name or quantity or cluster_id missing'
+        }
+    
+    result = db.clusters.find_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)})
+    cluster = result['cluster']
+    for i in range(parameters['quantity']):
+        cluster = openstackdriver._add_slave(cluster, flavor_name=parameters['flavor_name'])
+    db.clusters.update_one({'user_id': user['_id'], '_id': ObjectId(cluster_id)},
+                           {'$set': {'cluster': cluster}})
+    return "OK"
+
 
 
 ############################ START THE API SERVER #############################
