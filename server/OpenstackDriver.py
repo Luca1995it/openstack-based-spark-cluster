@@ -522,7 +522,9 @@ class OpenstackDriver:
     def _setup_master_after_reboot(self, master):
         self._set_server_metadata(master, key="status", value="SETTING-UP")
         master_floating_ip = self._get_floating_ips_from_instance(master)[0]
+        print("Master floating ip:", master_floating_ip)
         ssh = self._get_ssh_connection(master_floating_ip)
+        print("Connected to master, launching commands")
         ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
         self._set_server_metadata(master, key="status", value="ACTIVE")
 
@@ -532,7 +534,9 @@ class OpenstackDriver:
     def _setup_slave_after_reboot(self, slave):
         self._set_server_metadata(slave, key="status", value="SETTING-UP")
         slave_floating_ip = self._get_floating_ips_from_instance(slave)[0]
+        print("Slave floating ip:", slave_floating_ip)
         ssh = self._get_ssh_connection(slave_floating_ip)
+        print("Connected to slave, launching commands")
         ssh.exec_command("\n".join(self.restore_spark_service_commands_slave))
         self._set_server_metadata(slave, key="status", value="ACTIVE")
 
@@ -651,9 +655,11 @@ class OpenstackDriver:
         meta = self._get_server_metadata(server)
         sr = meta["spark_role"]
         if sr == "master":
+            print("Restarting master spark")
             threading.Thread(
                 target=self._setup_master_after_reboot, args=(server,)).start()
         elif sr == "slave":
+            print("Restarting slave spark")
             threading.Thread(
                 target=self._setup_slave_after_reboot, args=(server,)).start()
 
