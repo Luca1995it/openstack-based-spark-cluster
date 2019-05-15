@@ -407,7 +407,7 @@ class OpenstackDriver:
         ]
         
         ssh.exec_command("\n".join(commands))
-        self._set_server_metadata(master, {"status":"ACTIVE", "spark_role":"master"})
+        self._set_server_metadata(master, {"status":"ACTIVE", "spark_role": "master"})
         print("Master set up correctly!")
 
 
@@ -450,7 +450,7 @@ class OpenstackDriver:
         ssh.exec_command("\n".join(commands))
 
         print("Revoking floating ip from slave instance")
-        self._set_server_metadata(slave,{"status":"ACTIVE", "spark_role":"slave"})
+        self._set_server_metadata(slave,{"status": "ACTIVE", "spark_role": "slave"})
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
 
         slave_fixed_ips = self._get_fixed_ips_from_instance(slave)
@@ -497,13 +497,26 @@ class OpenstackDriver:
 
     def _get_server_status(self, server):
         s = self.conn.compute.find_server(server.id) #gives all the information correctly
-        if s.status == "BUILD":
-            return "BOOTING"
+        if s.status in [
+            "BUILD", 
+            "ERROR", 
+            "HARD_REBOOT", 
+            "PAUSED", 
+            "REBOOT", 
+            "REBUILD", 
+            "SHUTOFF", 
+            "SOFT_DELETED", 
+            "STOPPED",
+            "SUSPENDED"
+        ]:
+            return s.status
         else:
-            return self._get_server_metadata(s, key="status")
+            res = self._get_server_metadata(s, key="status")
+            return res or "UNKNOWN"
 
 
     def _reboot_server(self, server, mode="HARD", commands_on_boot=None):
+        server = self._check_instance(server)
         self.conn.compute.reboot_server(server, mode)
         self._set_server_metadata(server, key="status", value="REBOOTING")
 
@@ -528,8 +541,7 @@ class OpenstackDriver:
             ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
             self._set_server_metadata(server, key="status", value="ACTIVE")
 
-        elif sr == "slave":
-            
+        else:
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
             self._set_server_metadata(server, key="status", value="SETTING-UP")

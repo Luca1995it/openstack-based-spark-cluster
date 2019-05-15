@@ -287,7 +287,7 @@ def process(id):
 
 
 ############################### INSTANCE ######################################
-# Get single / list of clusters of the user with actual token
+# Get a single instance of the user with actual token
 @app.route('/api/instance/<id>', method=['OPTIONS', 'GET'])
 @require_api_token
 def process(id):
@@ -338,7 +338,7 @@ def process(action, id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
 
-    if 'action' not in ['start', 'restart', 'shutdown'] or 'id' is None:
+    if action not in ['start', 'restart', 'shutdown'] or id is None:
         return {
             'status': "MISSING_PARAMS",
             'message': 'action should be one of "start", "restart" or "shutdown" or id missing'
