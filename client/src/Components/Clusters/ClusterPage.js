@@ -218,7 +218,7 @@ class ClusterPage extends Component {
                                 />} />
                                 <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
                                     onClick={() => this.restart_spark(this.state.master.id)}
-                                    disabled={['ALIVE'].includes(this.state.master.spark_status) || !this.state.master.status === 'ACTIVE'}
+                                    disabled={['ALIVE'].includes(this.state.master.spark_status) || !(this.state.master.status === 'ACTIVE')}
                                 />} />
                                 <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                     onClick={() => this.shutdown(this.state.master.id)}
@@ -275,7 +275,7 @@ class ClusterPage extends Component {
                                             />} />
                                             <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
                                                 onClick={() => this.restart_spark(slave.id)}
-                                                disabled={['ALIVE'].includes(this.state.master.spark_status) || !this.state.master.status === 'ACTIVE'}
+                                                disabled={['ALIVE'].includes(this.state.master.spark_status) || !(this.state.master.status === 'ACTIVE')}
                                             />} />
                                             <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                                 onClick={() => this.shutdown(slave.id)}
@@ -292,7 +292,7 @@ class ClusterPage extends Component {
                 }
                 <Divider />
                 <Header size='medium'>What to do now ?</Header>
-                <Segment fluid className="cluster-description">
+                <Segment className="cluster-description">
                     If the status of <code>Spark</code> on the Master node is <code>ALIVE</code>, you can use your
                     ssh key to log into the <code>Master</code> instance and launch your <code>Spark</code> jobs.
                     You can see the state of Jobs and of <code>Spark</code> clicking the link that 
