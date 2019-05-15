@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { Header, Loader, Divider, Table, Button, Label, Icon } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
 import './Clusters.css';
 import axios from 'axios';
 import ClusterPageAdd from './ClusterPageAdd';
@@ -10,6 +9,7 @@ class ClusterPage extends Component {
     state = {
         isLoadingMaster: false,
         isLoadingSlaves: false,
+        isLoading: false,
         errorMessage: "",
         master: undefined,
         slaves: []
@@ -33,6 +33,7 @@ class ClusterPage extends Component {
             ...this.state,
             isLoadingMaster: true,
             isLoadingSlaves: true,
+            isLoading: false,
         });
         axios.get(`/api/instance/${this.props.cluster.master_id}`).then(res => {
             this.setState({
@@ -139,7 +140,7 @@ class ClusterPage extends Component {
     }
 
     render(){
-        if (this.state.isLoading) return 
+        if (this.state.isLoading) return <Loader active inline='centered' />
         return <div className='homeContainer'>
             <div className="homeSubContainer">
                 <Header size='medium'>
@@ -156,7 +157,7 @@ class ClusterPage extends Component {
                     <br/>
                     {this.state.master && (this.state.master.spark_status === 'ALIVE') && (this.state.master.public_ips.length > 0) ?
                         <a href={`http://${this.state.master.public_ips[0]}:8080`}
-                            target="_blank" >Spark Master Web UI</a>
+                            target="_blank" rel="noopener noreferrer">Spark Master Web UI</a>
                     : null}
                 </Header>
                 {this.state.isLoadingMaster ? <Loader active inline='centered' /> :
