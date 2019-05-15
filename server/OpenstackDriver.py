@@ -536,22 +536,30 @@ class OpenstackDriver:
         meta = self._get_server_metadata(server)
         sr = meta["spark_role"]
         if sr == "master":
-            self._set_server_metadata(server, key="status", value="SETTING-UP")
-            server_floating_ip = self._get_floating_ips_from_instance(server)[0]
-            ssh = self._get_ssh_connection(server_floating_ip)
-            ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
-            self._set_server_metadata(server, key="status", value="ACTIVE")
+            threading.Thread(target=self._setup_master_after_reboot, args=(server)).start()
 
         elif sr == "slave":
-            server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
-            ssh = self._get_ssh_connection(server_floating_ip)
-            self._set_server_metadata(server, key="status", value="SETTING-UP")
-            ssh.exec_command(self.restore_spark_service_commands_slave())
-
-            self._remove_floating_ip_from_instance(server, server_floating_ip)
-            self._set_server_metadata(server, key="status", value="ACTIVE") 
+            threading.Thread(target=self._setup_slave_after_reboot, args=(server)).start()
+            
         else: 
             print(f"No role declared for instance: {server.name} {server.id}")
+
+    def _setup_master_after_reboot(self,master):
+        self._set_server_metadata(master, key="status", value="SETTING-UP")
+        master_floating_ip = self._get_floating_ips_from_instance(master)[0]
+        ssh = self._get_ssh_connection(master_floating_ip)
+        ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
+        self._set_server_metadata(master, key="status", value="ACTIVE")
+
+    def _setup_slave_after_reboot(self,slave):
+        slave_floating_ip = self._add_floating_ip_to_instance(slave, self.public_net)
+        ssh = self._get_ssh_connection(slave_floating_ip)
+        self._set_server_metadata(slave, key="status", value="SETTING-UP")
+        ssh.exec_command(self.restore_spark_service_commands_slave())
+
+        self._remove_floating_ip_from_instance(slave, server_floating_ip)
+        self._set_server_metadata(slave, key="status", value="ACTIVE") 
+
 
     def _stop_server(self,server_id):
         self._set_server_metadata(server_id, "status", value="STOPPED")
