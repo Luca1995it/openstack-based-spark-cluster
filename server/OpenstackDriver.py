@@ -435,7 +435,8 @@ class OpenstackDriver:
         print("Waiting for master to be ready")
         # wait for all the nodes to be ready
         self._wait_instance(master)
-
+        self._set_server_metadata(master, "status", value="SETTING-UP")
+        
         print("Adding floating ip to master")
         # add floating ip to the master
         master_floating_ip = self._add_floating_ip_to_instance(master, self.public_net)
@@ -444,8 +445,6 @@ class OpenstackDriver:
         print("Trying to connect to master")
         ssh = self._get_ssh_connection(master_floating_ip)
         print("Connected to master!")
-
-        self._set_server_metadata(master, "status", value="SETTING-UP")
         
         ssh.exec_command("\n".join(self.setup_spark_service_commands_master(cluster_private_key, user_ssh_key)))
         self._set_server_metadata(master, {"status": "ACTIVE", "spark_role": "master"})
