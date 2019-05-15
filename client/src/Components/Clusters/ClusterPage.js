@@ -158,6 +158,10 @@ class ClusterPage extends Component {
         if (this.state.isLoading) return <Loader active inline='centered' />
         return <div className='homeContainer'>
             <div className="homeSubContainer">
+                <Button circular onClick={this.props.back}>
+                    <Icon name='back'/>
+                    Back to clusters
+                </Button>
                 <Header size='medium'>
                     Manage cluster "{this.props.cluster.name}"
                 </Header>

@@ -84,7 +84,7 @@ class Clusters extends Component {
 
     render() {
         if (this.state.isLoading) return <Loader active inline='centered' />
-        if (this.state.status) return <ClusterPage update={this.refresh} back={this.back} cluster={this.state.clusters[this.state.status]} />
+        if (this.state.status) return <ClusterPage update={this.refresh} back={this.back} cluster={this.state.clusters.find(c => c.id === this.state.status)} />
         return (
             <div className='homeContainer'>
                 <div className="homeSubContainer">
