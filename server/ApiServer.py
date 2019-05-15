@@ -342,9 +342,7 @@ def process(id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
 
-    print("/API/INSTANCE/...", parameters['action'], id)
-
-    if 'action' not in parameters or parameters['action'] not in ['start', 'restart', 'shutdown'] or id is None:
+    if 'action' not in parameters or parameters['action'] not in ['start', 'restart', 'shutdown', 'spark'] or id is None:
         return {
             'status': "MISSING_PARAMS",
             'message': 'action should be one of "start", "restart" or "shutdown" or id missing'
@@ -354,8 +352,10 @@ def process(id):
         openstackdriver._start_server(id)
     elif action == 'restart':
         openstackdriver._reboot_server(id)
-    else:
+    elif action == 'shutdown':
         openstackdriver._stop_server(id)
+    else:
+        openstackdriver._restart_spark(id)
     return "OK"
 
 

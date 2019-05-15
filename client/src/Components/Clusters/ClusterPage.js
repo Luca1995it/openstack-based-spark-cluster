@@ -160,7 +160,7 @@ class ClusterPage extends Component {
         return <div className='homeContainer'>
             <div className="homeSubContainer">
                 <Button circular onClick={this.props.back}>
-                    <Icon name='back'/>
+                    <Icon name='backward'/>
                     Back to clusters
                 </Button>
                 <Header size='medium'>
@@ -210,15 +210,19 @@ class ClusterPage extends Component {
                             <Table.Cell>
                                 <Popup content='Start' trigger={<Button circular icon='angle up' color='green'
                                     onClick={() => this.start(this.state.master.id)}
-                                    disabled={this.state.master.status !== 'STOPPED'}
+                                    disabled={!['SHUTOFF', 'STOPPED', 'SUSPENDED', 'PAUSED'].includes(this.state.master.status)}
                                 />} />
                                 <Popup content='Restart' trigger={<Button circular icon='redo' color='yellow'
                                     onClick={() => this.restart(this.state.master.id)}
-                                    disabled={this.state.master.status !== 'ACTIVE'}
+                                    disabled={!['ACTIVE', 'ERROR', 'UNKNOWN'].includes(this.state.master.status)}
+                                />} />
+                                <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
+                                    onClick={() => this.restart_spark(this.state.master.id)}
+                                    disabled={['ALIVE'].includes(this.state.master.spark_status)}
                                 />} />
                                 <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                     onClick={() => this.shutdown(this.state.master.id)}
-                                    disabled={this.state.master.status !== 'ACTIVE'}
+                                    disabled={!['ACTIVE', 'ERROR', 'UNKNOWN'].includes(this.state.master.status)}
                                 />} />
                             </Table.Cell>
                         </Table.Row> : null}
@@ -263,17 +267,21 @@ class ClusterPage extends Component {
                                         <Table.Cell>
                                             <Popup content='Start' trigger={<Button circular icon='angle up' color='green'
                                                 onClick={() => this.start(slave.id)}
-                                                disabled={slave.status !== 'STOPPED'}
+                                                disabled={!['SHUTOFF', 'STOPPED', 'SUSPENDED', 'PAUSED'].includes(slave.status)}
                                             />} />
                                             <Popup content='Restart' trigger={<Button circular icon='redo' color='yellow'
                                                 onClick={() => this.restart(slave.id)}
-                                                disabled={slave.status !== 'ACTIVE'}
+                                                disabled={!['ACTIVE', 'ERROR', 'UNKNOWN'].includes(slave.status)}
+                                            />} />
+                                            <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
+                                                onClick={() => this.restart_spark(slave.id)}
+                                                disabled={['ALIVE'].includes(this.state.master.spark_status)}
                                             />} />
                                             <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                                 onClick={() => this.shutdown(slave.id)}
-                                                disabled={slave.status !== 'ACTIVE'}
+                                                disabled={!['ACTIVE', 'ERROR', 'UNKNOWN'].includes(slave.status)}
                                             />} />
-                                            <Popup content='Delete' trigger={<Button circular icon='close' inverted
+                                            <Popup content='Delete' trigger={<Button circular icon='close' color='black'
                                                 onClick={() => this.delete(slave.id)}
                                             />} />
                                         </Table.Cell>
@@ -282,6 +290,15 @@ class ClusterPage extends Component {
                             </Table> : <Header size="tiny">There are no slaves in this cluster</Header>}
                         </div>
                 }
+                <Divider />
+                <Header size='medium'>What to do now ?</Header>
+                <Segment>
+                    If the status of <code>Spark</code> on the Master node is <code>ALIVE</code>, you can use your ssh key to log into the
+                    <code>Master</code> instance and launch your
+                    <code>Spark</code> jobs. You can see the state of Jobs and of <code>Spark</code> clicking the link that 
+                    will appear in the <code>Master</code> section. At the moment, only
+                    script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.
+                </Segment>
             </div>
         </div>
     }

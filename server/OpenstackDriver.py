@@ -469,10 +469,10 @@ class OpenstackDriver:
     def _get_server_metadata(self, server, key=None):
         update = self.conn.compute.get_server_metadata(server)
         if key != None:
-            try:
+            if key in update.metadata:
                 return update.metadata[key]
-            except KeyError:
-                return "Unknown"
+            else:
+                return None
         return update.metadata
 
 
@@ -499,7 +499,7 @@ class OpenstackDriver:
         server = self._check_instance(server) #gives all the information correctly
         if server.status in [
             "BUILD", 
-            "ERROR", 
+            "ERROR",
             "HARD_REBOOT", 
             "PAUSED", 
             "REBOOT", 
@@ -558,9 +558,19 @@ class OpenstackDriver:
         ssh = self._get_ssh_connection(slave_floating_ip)
         self._set_server_metadata(slave, key="status", value="SETTING-UP")
         ssh.exec_command(self.restore_spark_service_commands_slave())
-
         self._remove_floating_ip_from_instance(slave, slave_floating_ip)
         self._set_server_metadata(slave, key="status", value="ACTIVE") 
+
+
+    def _restart_spark(self, server):
+        server = self._check_instance(server)
+        meta = self._get_server_metadata(server)
+        sr = meta["spark_role"]
+        if sr == "master":
+            threading.Thread(target=self._setup_master_after_reboot, args=(server)).start()
+        elif sr == "slave":
+            threading.Thread(target=self._setup_slave_after_reboot, args=(server)).start()
+
 
 
     def _stop_server(self,server_id):
