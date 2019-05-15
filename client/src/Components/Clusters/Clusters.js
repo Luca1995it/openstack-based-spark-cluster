@@ -57,7 +57,10 @@ class Clusters extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.delete(`/api/cluster/${id}`).then(this.refresh).catch(err => {
+                axios.delete(`/api/cluster/${id}`).then(res => {
+                    console.log(res);
+                    this.refresh();
+                }).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,

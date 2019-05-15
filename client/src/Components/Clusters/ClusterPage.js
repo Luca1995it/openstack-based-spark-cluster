@@ -116,6 +116,27 @@ class ClusterPage extends Component {
         });
     }
 
+    restart_spark(id){
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        }, () => {
+            axios.put(`/api/instance/${id}`, {
+                action: "restart_spark"
+            }).then(res => {
+                console.log(res);
+                this.refresh();
+            }).catch(err => {
+                console.log(err);
+                this.setState({
+                    ...this.state,
+                    isLoading: false,
+                    errorMessage: "There was a problem restarting the instance, try refreshing the page"
+                });
+            });
+        });
+    }
+
     shutdown(id){
         this.setState({
             ...this.state,
