@@ -368,6 +368,8 @@ def process(cluster_id, id):
     token = request.get_header('X-CSRF-Token')
     user = db.users.find_one({'token': token})
 
+    print("Deleting instance", id, "of cluster", cluster_id)
+
     if id is None or cluster_id is None:
         return {
             'status': "MISSING_PARAMS",
