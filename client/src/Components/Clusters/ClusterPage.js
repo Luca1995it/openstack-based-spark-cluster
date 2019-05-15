@@ -132,7 +132,7 @@ class ClusterPage extends Component {
                 this.setState({
                     ...this.state,
                     isLoading: false,
-                    errorMessage: "There was a problem restarting the instance, try refreshing the page"
+                    errorMessage: "There was a problem restarting stark on the instance, try refreshing the page"
                 });
             });
         });
