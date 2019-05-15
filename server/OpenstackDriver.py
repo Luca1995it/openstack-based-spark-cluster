@@ -488,7 +488,7 @@ class OpenstackDriver:
         master_floating_ip = self._get_floating_ips_from_instance(master)[0]
 
         ssh = self._get_ssh_connection(master_floating_ip)
-        ssh.exec_command(f"echo {slave_fixed_ips[0]} >> /usr/local/spark/sbin/slaves")
+        ssh.exec_command(f"echo {slave_fixed_ips[0]} >> /usr/local/spark/conf/slaves")
 
 
     #######################################################
@@ -708,7 +708,6 @@ class OpenstackDriver:
     '''
     wait an instance to become "ACTIVE"
     '''
-
     def _wait_instance(self, instance, status='ACTIVE'):
         self.conn.compute.wait_for_server(instance, status=status, wait=240)
 
@@ -739,12 +738,13 @@ class OpenstackDriver:
         cluster['slaves_ids'].remove(slave_id)
         # with calm, remove the instance
         def _delete_slave_and_remove_from_master_list(slave, master):
-            ips = self._get_fixed_ips_from_instance(slave)
-            for ip in ips:
+            floating_ips = self._get_floating_ips_from_instance(slave)
+            for ip in floating_ips:
                 self._remove_floating_ip_from_instance(slave, ip)
+            fixed_ips = self._get_fixed_ips_from_instance(slave)
             self._delete_instance(slave)
             # remove ips from master list
-            command = [f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in ips]
+            command = [f"sed -i '/{ip}/d' /usr/local/spark/conf/slaves" for ip in fixed_ips]
             master_floating_ip = self._get_floating_ips_from_instance(master)[0]
             ssh = self._get_ssh_connection(master_floating_ip)
             ssh.exec_command("\n".join(command))

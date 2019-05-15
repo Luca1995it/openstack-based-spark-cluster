@@ -321,13 +321,21 @@ class ClusterPage extends Component {
                 <Divider />
                 <Header size='medium'>What to do now ?</Header>
                 <Segment className="cluster-description">
-                    <p>If the status of <code>Spark</code> on the Master node is <code>ALIVE</code>, you can use your
-                    ssh key to log into the <code>Master</code> instance and launch your <code>Spark</code> jobs.
-                    You can see the state of Jobs and of <code>Spark</code> clicking the link that 
-                    will appear in the <code>Master</code> section. At the moment, only
-                    script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.
+                    <p>
+                        If the status of <code>Spark</code> on the Master node is <code>ALIVE</code>, you can use your
+                        ssh key to log into the <code>Master</code> instance and launch your <code>Spark</code> jobs.
+                        You can see the state of Jobs and of <code>Spark</code> clicking the link that 
+                        will appear in the <code>Master</code> section. At the moment, only
+                        script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.
+                    </p>
                     <br/>
-                    Check the example in your <code>Master</code> instance and launch it with <code>/usr/local/spark/bin/spark-submit.sh --master spark://ip_of_this_machine:7077 spark-example.py</code>
+                    <p>
+                        Check the example in your <code>Master</code> instance and launch it with <code>/usr/local/spark/bin/spark-submit --master spark://ip_of_this_machine:7077 spark-example.py</code>
+                    </p>
+                    <br/>
+                    <p>
+                        If you receive a warning saying <code>Initial job has not accepted any resources; check your cluster UI to ensure that workers are registered and have sufficient resources</code>, you should
+                        consider buying bigger slaves.
                     </p>
                 </Segment>
             </div>
