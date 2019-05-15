@@ -325,27 +325,9 @@ class ClusterPage extends Component {
                     ssh key to log into the <code>Master</code> instance and launch your <code>Spark</code> jobs.
                     You can see the state of Jobs and of <code>Spark</code> clicking the link that 
                     will appear in the <code>Master</code> section. At the moment, only
-                    script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.</p>
-                    <p>
-                        Example:
-                        <pre><code class="python">
-
-                            import random
-                            from pyspark import SparkContext
-                            sc = SparkContext()
-
-                            NUM_SAMPLES = 100000
-
-                            def inside(p):
-                                x, y = random.random(), random.random()
-                                return x*x + y*y < 1
-                            
-                            count = sc.parallelize(range(0, NUM_SAMPLES)).filter(inside).count()
-                            
-                            print("Pi is roughly %f" % (4.0 * count / NUM_SAMPLES))
-                            
-                            # Launch with /usr/local/spark/bin/spark-submit.sh --master spark://ip_of_this_machine:7077 spark-example.py
-                        </code></pre>
+                    script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.
+                    <br/>
+                    Check the example in your <code>Master</code> instance and launch it with <code>/usr/local/spark/bin/spark-submit.sh --master spark://ip_of_this_machine:7077 spark-example.py</code>
                     </p>
                 </Segment>
             </div>
