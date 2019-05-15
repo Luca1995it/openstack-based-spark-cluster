@@ -541,14 +541,16 @@ class OpenstackDriver:
             ssh.exec_command("\n".join(self.restore_spark_service_commands_master))
             self._set_server_metadata(server, key="status", value="ACTIVE")
 
-        else:
+        elif sr == "slave":
             server_floating_ip = self._add_floating_ip_to_instance(server, self.public_net)
             ssh = self._get_ssh_connection(server_floating_ip)
             self._set_server_metadata(server, key="status", value="SETTING-UP")
             ssh.exec_command(self.restore_spark_service_commands_slave())
 
             self._remove_floating_ip_from_instance(server, server_floating_ip)
-            self._set_server_metadata(server, key="status", value="ACTIVE")            
+            self._set_server_metadata(server, key="status", value="ACTIVE") 
+        else: 
+            print(f"No role declared for instance: {server.name} {server.id}")
 
     def _stop_server(self,server_id):
         self._set_server_metadata(server_id, "status", value="STOPPED")
