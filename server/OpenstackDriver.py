@@ -743,7 +743,7 @@ class OpenstackDriver:
             ssh = self._get_ssh_connection(master_floating_ip)
             ssh.exec_command("\n".join(command))
         # launch as a thread to return a respose to the client asap
-        threading.Thread(target=self._delete_slave_and_remove_from_master_list, args=(
+        threading.Thread(target=_delete_slave_and_remove_from_master_list, args=(
             slave_id, cluster['master_id'])).start()
         return cluster
 

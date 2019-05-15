@@ -326,6 +326,11 @@ class ClusterPage extends Component {
                     You can see the state of Jobs and of <code>Spark</code> clicking the link that 
                     will appear in the <code>Master</code> section. At the moment, only
                     script written in <code>Java</code> or <code>Python</code> can be launched with <code>Spark</code>.
+
+                    Example:
+                    <code>
+                        
+                    </code>
                 </Segment>
             </div>
         </div>
