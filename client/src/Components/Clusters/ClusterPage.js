@@ -74,7 +74,9 @@ class ClusterPage extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.put(`/api/instance/start/${id}`).then(this.refresh).catch(err => {
+                axios.put(`/api/instance/${id}`, {
+                    action: "start"
+                }).then(this.refresh).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,
@@ -90,8 +92,8 @@ class ClusterPage extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.put(`/api/instance/restart/${id}`, {
-                action: "start"
+            axios.put(`/api/instance/${id}`, {
+                action: "restart"
             }).then(res => {
                 console.log(res);
                 this.refresh();
@@ -111,7 +113,9 @@ class ClusterPage extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.put(`/api/instance/shutdown/${id}`).then(this.refresh).catch(err => {
+                axios.put(`/api/instance/${id}`, {
+                    action: "shutdown"
+                }).then(this.refresh).catch(err => {
                 console.log(err);
                 this.setState({
                     ...this.state,
@@ -127,9 +131,12 @@ class ClusterPage extends Component {
             ...this.state,
             isLoading: true,
         }, () => {
-            axios.delete(`/api/instance/${id}`, {
-                cluster_id:  this.props.cluster.id
-            }).then(res => {
+                // axios delete needs a particular way to declare data
+                axios.delete(`/api/instance/${id}`, {
+                    data: {
+                        cluster_id: this.props.cluster.id
+                    }
+                }).then(res => {
                 console.log(res);
                 this.refresh();
             }).catch(err => {
