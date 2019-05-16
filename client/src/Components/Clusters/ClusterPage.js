@@ -244,7 +244,7 @@ class ClusterPage extends Component {
                                 />} />
                                 <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
                                     onClick={() => this.restart_spark(this.state.master.id)}
-                                    disabled={['ALIVE'].includes(this.state.master.spark_status) || !(this.state.master.status === 'ACTIVE')}
+                                    disabled={['ACTIVE'].includes(this.state.master.spark_status) || !(this.state.master.status === 'ACTIVE')}
                                 />} />
                                 <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                     onClick={() => this.shutdown(this.state.master.id)}
@@ -299,7 +299,7 @@ class ClusterPage extends Component {
                                             />} />
                                             <Popup content='Restart Spark' trigger={<Button circular icon='redo' color='orange'
                                                 onClick={() => this.restart_spark(slave.id)}
-                                                disabled={['ALIVE'].includes(this.state.master.spark_status) || !(this.state.master.status === 'ACTIVE')}
+                                                disabled={['ACTIVE'].includes(this.state.master.spark_status) || !(this.state.master.status === 'ACTIVE')}
                                             />} />
                                             <Popup content='Shutdown' trigger={<Button circular icon='angle down' color='red'
                                                 onClick={() => this.shutdown(slave.id)}
