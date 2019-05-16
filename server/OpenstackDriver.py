@@ -577,7 +577,7 @@ class OpenstackDriver:
         server = self._check_instance(server)
         print("Server status:", server.status)
         if server.status in [
-            "BUILD",
+            "BUILDING",
             "ERROR",
             "HARD_REBOOT",
             "PAUSED",
@@ -665,7 +665,7 @@ class OpenstackDriver:
     '''
     def _reboot_server(self, server, mode="SOFT"):
         server = self._check_instance(server)
-        self._set_server_metadata(server, key="status", value="REBOOTING")
+        self._set_server_metadata(server, key="status", value="REBOOT")
         self.conn.compute.reboot_server(server, mode)
         def then(server):
             self._wait_instance(server, status='REBOOT')
