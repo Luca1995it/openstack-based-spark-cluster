@@ -516,6 +516,12 @@ class OpenstackDriver:
                 return None
         return update.metadata
 
+    '''
+    unset a key in metadata
+    '''
+    def _delete_server_metadata(self, server, keys=[]):
+        self.conn.compute.delete_server_metadata(server, keys=keys)
+
 
     #######################################################
     ########### SPARK UTILITIES ON INSTANCES ##############
@@ -627,7 +633,8 @@ class OpenstackDriver:
         self.conn.compute.stop_server(server)
         def then(server):
             self._wait_instance(server, status='SHUTOFF')
-            self._set_server_metadata(server, key="status", value=None)
+            #self._set_server_metadata(server, key="status", value=None)
+            self._delete_server_metadata(server, keys=["status"])
         threading.Thread(target=then, args=(server,)).start()
         
     '''
@@ -669,7 +676,8 @@ class OpenstackDriver:
         self.conn.compute.reboot_server(server, mode)
         def then(server):
             self._wait_instance(server, status='REBOOT')
-            self._set_server_metadata(server, key="status", value=None)
+            #self._set_server_metadata(server, key="status", value=None)
+            self._delete_server_metadata(server, keys=["status"])
             self._wait_instance(server)  # wait to be newly on
             self._restart_spark(server)
         threading.Thread(target=then, args=(server,)).start()
