@@ -81,6 +81,7 @@ class OpenstackDriver:
             f'cd /usr/local/spark/conf && echo "export SPARK_MASTER_HOST=$(hostname -I)" > spark-env.sh',
             # let user access the master of the cluster with his key
             f'cd ~/.ssh && echo "{user_ssh_key}" >> authorized_keys',
+            # start the master
             f'/usr/local/spark/sbin/start-master.sh'
         ]
         self.setup_spark_service_commands_slave = lambda master_fixed_ip, cluster_public_key, starting_memory: [
