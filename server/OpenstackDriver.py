@@ -706,6 +706,7 @@ class OpenstackDriver:
     wait an instance to become "ACTIVE"
     '''
     def _wait_instance(self, instance, status='ACTIVE'):
+        instance = self._check_instance(instance)
         self.conn.compute.wait_for_server(instance, status=status, wait=240)
 
     ################### SLAVES ############################
