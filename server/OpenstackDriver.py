@@ -125,10 +125,9 @@ class OpenstackDriver:
         }
 
     @staticmethod
-    def create_instance(instance, flavor, number_running_app, spark_status, status, private_ips=[], public_ips=[]):
+    def create_instance(instance, flavor, spark_status, status, private_ips=[], public_ips=[]):
         return {
             'name': instance.name,
-            'number_running_app': number_running_app,
             'spark_status': spark_status,
             'status': status,
             'id': instance.id,
@@ -551,21 +550,6 @@ class OpenstackDriver:
     ############# UTILITIES ON INSTANCES ##################
     #######################################################
 
-    '''
-    connect to the spark web UI and extract the number of running jobs
-    '''
-    def _get_server_running_application_number(self, server):
-        try:
-            ip = self._get_floating_ips_from_instance(server)[0]
-            resp = requests.get(
-                f"http://{ip}:8080/api/v1/applications").content
-            soup = bs(resp, "html", features="html.parser")
-            # extracts the content of the line with the number of running applications
-            line = soup.find("span", {"id": "running-app"}).find("a")
-            return int(re.search("\d", str(line)).group(0))
-        except:
-            return 0
-
 
     '''
     connect to the spark web UI and extract the spark status
@@ -699,11 +683,9 @@ class OpenstackDriver:
         flavor = self.conn.compute.find_flavor(server.flavor['id'])
         public_ips, private_ips = self._get_floating_ips_from_instance(
             server), self._get_fixed_ips_from_instance(server)
-        number_running_app = self._get_server_running_application_number(
-            server)
         spark_status = self._get_server_spark_status(server)
         status = self._get_server_status(server)
-        return OpenstackDriver.create_instance(server, flavor, number_running_app, spark_status, status, private_ips, public_ips)
+        return OpenstackDriver.create_instance(server, flavor, spark_status, status, private_ips, public_ips)
 
     '''
     wait an instance to become "ACTIVE"

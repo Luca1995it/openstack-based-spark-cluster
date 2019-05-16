@@ -219,9 +219,8 @@ class ClusterPage extends Component {
                             <Table.HeaderCell rowSpan='1'>Swap</Table.HeaderCell>
                             <Table.HeaderCell rowSpan='2'>Status</Table.HeaderCell>
                             <Table.HeaderCell rowSpan='2'>Spark Status</Table.HeaderCell>
-                            <Table.HeaderCell rowSpan='1'>Running jobs</Table.HeaderCell>
                             <Table.HeaderCell rowSpan='2'>IP(s)</Table.HeaderCell>
-                            <Table.HeaderCell rowSpan='3'>Actions</Table.HeaderCell>
+                            <Table.HeaderCell rowSpan='4'>Actions</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -233,7 +232,6 @@ class ClusterPage extends Component {
                             <Table.Cell>{`${this.state.master.flavor.swap} MB`}</Table.Cell>
                             <Table.Cell>{`${this.state.master.status}`}</Table.Cell>
                             <Table.Cell>{`${this.state.master.spark_status}`}</Table.Cell>
-                            <Table.Cell>{`${this.state.master.number_running_app}`}</Table.Cell>
                             <Table.Cell>{`[${this.state.master.public_ips.join(", ")}]`}</Table.Cell>
                             <Table.Cell>
                                 <Popup content='Start' trigger={<Button circular icon='angle up' color='green'
@@ -275,9 +273,8 @@ class ClusterPage extends Component {
                                     <Table.HeaderCell rowSpan='1'>Swap</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='2'>Status</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='2'>Spark Status</Table.HeaderCell>
-                                    <Table.HeaderCell rowSpan='1'>Running jobs</Table.HeaderCell>
                                     <Table.HeaderCell rowSpan='2'>IP(s)</Table.HeaderCell>
-                                    <Table.HeaderCell rowSpan='3'>Actions</Table.HeaderCell>
+                                    <Table.HeaderCell rowSpan='4'>Actions</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
@@ -290,7 +287,6 @@ class ClusterPage extends Component {
                                         <Table.Cell>{`${slave.flavor.swap} MB`}</Table.Cell>
                                         <Table.Cell>{`${slave.status}`}</Table.Cell>
                                         <Table.Cell>{`${slave.spark_status}`}</Table.Cell>
-                                        <Table.Cell>{`${slave.number_running_app}`}</Table.Cell>
                                         <Table.Cell>{`[${slave.public_ips.join(", ")}]`}</Table.Cell>
                                         <Table.Cell>
                                             <Popup content='Start' trigger={<Button circular icon='angle up' color='green'
