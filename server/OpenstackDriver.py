@@ -608,7 +608,6 @@ class OpenstackDriver:
         net = self.conn.network.find_network(network_name)
         return self.conn.compute.create_server(name=name, image_id=img.id, flavor_id=flv.id, networks=[{'uuid': net.id}], security_groups=[{'name': security_group_name}])
     
-
     '''
     if instance is an id, return the instance object,
     otherwise return it without operations
@@ -623,9 +622,14 @@ class OpenstackDriver:
     simply stop an instance
     '''
     def _stop_server(self, server):
+        server = self._check_instance(server)
+        self._set_server_metadata(server, key="status", value="SHUTTING_DOWN")
         self.conn.compute.stop_server(server)
-
-
+        def then(server):
+            self._wait_instance(server, status='SHUTOFF')
+            self._set_server_metadata(server, key="status", value=None)
+        threading.Thread(target=then, args=(server,)).start()
+        
     '''
     simply start an instance
     '''
@@ -636,6 +640,7 @@ class OpenstackDriver:
             self._wait_instance(server)  # wait to be newly on
             self._restart_spark(server)
         threading.Thread(target=then, args=(server,)).start()
+
 
     '''
     restart spark on an instance. if it is master
@@ -660,10 +665,11 @@ class OpenstackDriver:
     '''
     def _reboot_server(self, server, mode="SOFT"):
         server = self._check_instance(server)
+        self._set_server_metadata(server, key="status", value="REBOOTING")
         self.conn.compute.reboot_server(server, mode)
-        self._wait_instance(server, status='REBOOT')
-        #self._set_server_metadata(server, key="status", value="REBOOTING")
         def then(server):
+            self._wait_instance(server, status='REBOOT')
+            self._set_server_metadata(server, key="status", value=None)
             self._wait_instance(server)  # wait to be newly on
             self._restart_spark(server)
         threading.Thread(target=then, args=(server,)).start()
