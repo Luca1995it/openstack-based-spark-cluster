@@ -17,7 +17,7 @@ RESERVED_RAM = 128 # RAM to reserve for the OS in MB (not counting swap space)
 
 class NetAddr:
 
-    def __init__(self,o1=192,o2=168,o3=1,o4=0,mask=24):
+    def __init__(self, o1=192, o2=168, o3=1, o4=0, mask=24):
         self.curr_o1 = o1
         self.curr_o2 = o2
         self.curr_o3 = o3
