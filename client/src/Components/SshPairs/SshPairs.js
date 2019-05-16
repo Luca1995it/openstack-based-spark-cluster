@@ -79,9 +79,6 @@ class Pricing extends Component {
                                 </Table.Row>)}
                         </Table.Body>
                     </Table> : <Label>No key available, click add to add a new one</Label>}
-                    <div className='homeAdvices'>
-                        {'There are 4 clusters running!'}
-                    </div>
                 </div>
             </div>
         )
