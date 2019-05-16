@@ -792,6 +792,10 @@ class OpenstackDriver:
             for slave_id in cluster['slaves_ids']:
                 self._delete_instance(slave_id)
             self._delete_instance(cluster['master_id'])
+
+            for slave_id in cluster['slaves_ids']:
+                self._wait_instance(slave_id, status='DELETED')
+            self._wait_instance(cluster['master_id'], status='DELETED')
             # retrieve instances of nets and routers
             subnet = self.conn.network.find_subnet(cluster['subnet_id'])
             network = self.conn.network.find_network(cluster['network_id'])
